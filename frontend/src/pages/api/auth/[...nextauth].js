@@ -15,19 +15,26 @@ export const authOptions = {
     ],
     secret: process.env.NEXT_PUBLIC_JWT_SECRET,
     callbacks: {
-        // async jwt({ token, account, profile }) {
-        async jwt({ token, account, profile }) {
-            console.log("token", token)
-            console.log("account", account)
-            console.log("profile", profile)
-            // Persist the OAuth access_token and or the user id to the token right after signin
-            if (account) {
-                token.accessToken = account.access_token
-                token.id = profile.id
-            }
-            return token
-        }
-    }
+        async signIn(user, account, profile) {
+            // Call your API to create user at port 8000 endpoint /auth/callback
+            const response = await fetch(process.env.NEXT_PUBLIC_API + "/auth/callback", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    // Pass any data you need to send to your API
+                    user: user,
+                }),
+            });
+
+            // Handle the response from your API as needed
+            const data = await response.json();
+
+            // Return true to allow sign in, or false to prevent sign in
+            return true;
+        },
+    },
 }
 
 export default NextAuth(authOptions)
