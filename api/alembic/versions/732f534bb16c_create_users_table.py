@@ -26,7 +26,7 @@ def upgrade():
         # created_at with timezone
         sa.Column("created_at", sa.TIMESTAMP(timezone=True), server_default=sa.func.now()),
         sa.Column("updated_at", sa.TIMESTAMP(timezone=True), server_default=sa.func.now(), onupdate=sa.func.now()),
-        sa.Column("deleted_at", sa.TIMESTAMP(timezone=True)),
+        sa.Column("deleted_at", sa.TIMESTAMP(timezone=True), nullable=True),
     )
 
 
