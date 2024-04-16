@@ -166,3 +166,4 @@ cython_debug/
 *.notes.md
 *.notes.txt
 devops/ssh.txt
+inference/

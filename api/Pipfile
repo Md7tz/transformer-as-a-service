@@ -12,6 +12,17 @@ sqlalchemy = "*"
 alembic = "*"
 databases = {extras = ["postgresql"], version = "*"}
 python-dotenv = "*"
+jwt = "*"
+pydantic-settings = "*"
+pyjwt = "*"
+authlib = "*"
+httpx = "*"
+starlette = "*"
+itsdangerous = "*"
+httplib2 = "*"
+oauth2client = "*"
+google-auth = "*"
+requests = "*"
 
 [dev-packages]
 
