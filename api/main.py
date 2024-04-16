@@ -1,55 +1,24 @@
 import os
-import databases
-import sqlalchemy
-from typing import Optional, List
-from fastapi import FastAPI, Depends
-from pydantic import BaseModel
-from dotenv import load_dotenv
-from datetime import datetime
+from typing import Annotated
+from fastapi import FastAPI, Depends, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.sessions import SessionMiddleware
+from fastapi_nextauth_jwt import NextAuthJWT
 
-from utils import VerifyToken
+from sqlalchemy.orm import Session
+from database import SessionLocal, engine
+from models import User
+import json
 
+from dotenv import load_dotenv
+from config import get_settings
 load_dotenv()
 
-# Scheme for the Authorization header
-auth = VerifyToken()
-DATABASE_URL = os.getenv("DATABASE_URL")
-
-database = databases.Database(DATABASE_URL)
-metadata = sqlalchemy.MetaData()
-
-users = sqlalchemy.Table(
-    "users",
-    metadata,
-    sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
-    sqlalchemy.Column("username", sqlalchemy.String(255), nullable=False),
-    sqlalchemy.Column("created_at", sqlalchemy.TIMESTAMP(timezone=True), server_default=sqlalchemy.func.now()),
-    sqlalchemy.Column("updated_at", sqlalchemy.TIMESTAMP(timezone=True), server_default=sqlalchemy.func.now(), onupdate=sqlalchemy.func.now()),
-    sqlalchemy.Column("deleted_at", sqlalchemy.TIMESTAMP(timezone=True)),
-)
-
-engine = sqlalchemy.create_engine(DATABASE_URL)
-
-# metadata.create_all(engine)
-# automatically creates the database tables based on your sqlalchemy table definitions. 
-# Since we’re using alembic, we don’t need this, so we will comment it out.
-
-class UserIn(BaseModel):
-    username: str
-
-class User(BaseModel):
-    id: int
-    username: str
-    created_at: Optional[datetime]
-    updated_at: Optional[datetime]
-    deleted_at: Optional[datetime]
-    
 app = FastAPI()
 
 origins = [
     "http://localhost",
-    "http://localhost:8080",
+    "http://localhost:8000",
     "http://localhost:3000",
 ]
 
@@ -62,16 +31,69 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-@app.on_event("startup")
-async def startup():
-    await database.connect()
-
-@app.on_event("shutdown")
-async def shutdown():
-    await database.disconnect()
+app.add_middleware(SessionMiddleware, secret_key=get_settings().secret_key)
+JWT = NextAuthJWT(
+    secret=get_settings().secret_key,
+    csrf_prevention_enabled=True,
+    check_expiry=True
+)
 
 
+# Dependency to get the database session
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+@app.get("/api")
+def read_root(jwt: Annotated[dict, Depends(JWT)]):
+    print(jwt)
+    return {"message": f"Hi {jwt['name']}. Greetings from fastapi!"}
+
+@app.post("/api/auth/callback")
+async def handle_callback(user_data: dict, db: Session = Depends(get_db)):
+    # Extract user data from the request body
+    user = user_data['user']
+    provider = user_data['provider']
+    
+    # Check if user already exists
+    existing_user = db.query(User).filter(User.username == user["email"]).first()
+    if existing_user:
+        # print(existing_user.username)
+        # Return response if user already exists
+        return Response(content=json.dumps({"message": "User already exists"}), status_code=200)
+        
+
+    # Create a new User instance
+    new_user = User(username=user["email"])
+
+    # Add the new user to the database
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    return {"message": "User created successfully", "user": new_user}
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="localhost", port=8000)
+
+
+
+# Scheme for the Authorization header
+# auth = VerifyToken()
+# from utils import VerifyToken
+
+# @app.on_event("startup")
+# async def startup():
+#     await database.connect()
+
+# @app.on_event("shutdown")
+# async def shutdown():
+#     await database.disconnect()
 
 # @app.get("/users/", response_model=List[User])
 # async def read_users():
@@ -85,32 +107,24 @@ async def shutdown():
 #     last_record_id = await database.execute(query)
 #     return {**user.dict(), "id": last_record_id}
 
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
+# @app.get('/api/public')
+# def public():
+#     """No access token required to access this route"""
 
-@app.get('/api/public')
-def public():
-    """No access token required to access this route"""
-
-    result = {
-        "status": "success",
-        "msg": ("Hello from a public endpoint! You don't need to be "
-                "authenticated to see this.")
-    }
-    return result
+#     result = {
+#         "status": "success",
+#         "msg": ("Hello from a public endpoint! You don't need to be "
+#                 "authenticated to see this.")
+#     }
+#     return result
 
 
-@app.get("/api/private")
-def private(auth_result: str = Depends(auth.verify)):
-    """A valid access token is required to access this route"""
+# @app.get("/api/private")
+# def private(auth_result: str = Depends(auth.verify)):
+#     """A valid access token is required to access this route"""
 
-    # result = token.credentials
+#     # result = token.credentials
 
-    return auth_result
+#     return auth_result
 
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
 

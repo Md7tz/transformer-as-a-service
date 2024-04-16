@@ -16,6 +16,11 @@ export const authOptions = {
     secret: process.env.NEXT_PUBLIC_JWT_SECRET,
     callbacks: {
         async signIn(user, account, profile) {
+            let _user = user?.user
+            let _provider = user?.account?.provider
+
+            // console.log(_user)
+            // console.log(_provider)
             // Call your API to create user at port 8000 endpoint /auth/callback
             const response = await fetch(process.env.NEXT_PUBLIC_API + "/auth/callback", {
                 method: "POST",
@@ -24,7 +29,8 @@ export const authOptions = {
                 },
                 body: JSON.stringify({
                     // Pass any data you need to send to your API
-                    user: user,
+                    user: _user,
+                    provider: _provider,
                 }),
             });
 
