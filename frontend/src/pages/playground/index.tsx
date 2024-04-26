@@ -71,6 +71,7 @@ export default function Playground() {
     setPrompt("");
     setModelName("bert");
     setType("sentiment");
+    setJsonDisplay({})
   }
 
   function getModelsOptions() {

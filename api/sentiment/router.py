@@ -3,7 +3,9 @@ from fastapi import APIRouter, HTTPException, Request
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from fastapi import Depends
 from auth.utils import JWT
+from .processor import SentimentProcessor
 
+processor = SentimentProcessor()
 
 router = APIRouter(
     prefix="/sentiment",
@@ -26,27 +28,17 @@ async def read_root():
 async def predict_sentiment(request: dict, jwt: Annotated[dict, Depends(JWT)]):
     prompt = request.get("prompt").strip()
     model_name = request.get("model_name")
-    analysis_type = request.get("type")
+    # analysis_type = request.get("type")
 
     print(f"prompt: {prompt}")
     print(f"model_name: {model_name}")
     if not model_name:
         raise HTTPException(status_code=400, detail="missing model")
-    
-    if not prompt:
+    elif not prompt:
         raise HTTPException(status_code=400, detail="missing prompt")
     
-    # Tokenize input text
-    inputs = tokenizer(prompt, return_tensors="pt")
-    labels = model.config.id2label
-    # Perform inference
-    outputs = model(**inputs)
-    
-    # Get predicted labels and scores
-    logits = outputs.logits
-    scores = logits.softmax(dim=1).tolist()[0]
-    labels = [labels[i] for i in range(len(labels))]
-
-    results = [{"label": label, "score": score} for label, score in zip(labels, scores)]
+    if model_name:
+        processor.load_model(model_name)
+    results = processor.process(prompt)
     
     return results
