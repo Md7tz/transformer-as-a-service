@@ -4,6 +4,7 @@ from typing import Optional
 from pydantic import BaseModel
 from time import time
 import torch
+from enum import IntEnum, auto
 
 class SentimentProcessor:
     def __init__(self):
@@ -17,7 +18,7 @@ class SentimentProcessor:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     def load_model(self, model_name: str):
-        mapped_model_name = self.model_mapping.get(model_name, model_name)
+        mapped_model_name = self.model_mapping.get(model_name)
         try:
             self.tokenizer = AutoTokenizer.from_pretrained(mapped_model_name)
             self.model = AutoModelForSequenceClassification.from_pretrained(mapped_model_name)
@@ -49,3 +50,8 @@ class SentimentProcessor:
 
         return results
         
+
+class ModelType(IntEnum):
+    CLASSIFICATION = auto()
+    NER = auto()
+    
