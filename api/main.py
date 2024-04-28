@@ -6,7 +6,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from dotenv import load_dotenv
 from config import get_settings
-from auth.utils import JWT
+from dependencies import get_jwt
 from auth.router import router as auth_router
 from sentiment.router import router as sentiment_router
 
@@ -35,7 +35,7 @@ app.add_middleware(SessionMiddleware, secret_key=get_settings().secret_key)
 
 
 @app.get("/")
-def read_root(jwt: Annotated[dict, Depends(JWT)]):
+def read_root(jwt: Annotated[dict, Depends(get_jwt)]):
     print(jwt)
     return {"message": f"Hi {jwt['name']}. Greetings from fastapi!"}
 

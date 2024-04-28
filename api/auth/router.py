@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
-from database import SessionLocal, engine
+from dependencies import get_db
 
 from models import User
 import json
@@ -10,14 +10,6 @@ router = APIRouter(
     prefix="/auth",
     tags=["auth"],
 )
-
-# Dependency to get the database session
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 @router.post("/callback")
