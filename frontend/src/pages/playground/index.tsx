@@ -39,6 +39,7 @@ export default function Playground() {
   const [modelName, setModelName] = useState("bert");
   const [type, setType] = useState("sentiment");
   const [jsonDisplay, setJsonDisplay] = useState({})
+  const [compute, setCompute] = useState({ computation_time: -1, device: '' }) // [time, device]
 
   // useEffect(() => {
   //   // This effect will run when `prompt`, `model`, or `type` changes
@@ -63,8 +64,12 @@ export default function Playground() {
       body: JSON.stringify({ prompt, model_name: modelName, type }),
     });
     const data = await response.json();
+    // get last element of data
+    console.log(data.slice(-1)[0]);
+    setCompute(data.slice(-1)[0])
+    // remove last element
+    data.pop()
     setJsonDisplay(data)
-    console.log(data);
   }
 
   function onCLear() {
@@ -184,6 +189,22 @@ export default function Playground() {
               <Undo className="size-3.5" />
             </Button>
           </div>
+          <div className="flex items-center gap-3">
+            {compute.computation_time !== -1 && (
+              <span>
+                Computation time:{" "}
+                <span className="font-medium ">
+                  {compute.computation_time.toFixed(4)}s
+                </span>{" "}
+                on{" "}
+                <span className="font-medium">{compute.device}</span>.
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+            {/*  */}
+          </div>
+
         </form>
       </div>
       <div className="relative flex h-full min-h-[50vh] flex-col rounded-xl bg-muted/50 p-4 lg:col-span-2">
