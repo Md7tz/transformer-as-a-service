@@ -17,6 +17,23 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+
+
 
 const MODELS = {
   bert: {
@@ -29,24 +46,51 @@ const MODELS = {
   },
 };
 
+
+export function TableComponent({ data }: { data: any }) {
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Model</TableHead>
+          <TableHead>Type of Analysis</TableHead>
+          <TableHead>Prompt</TableHead>
+          <TableHead>Result</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {data?.map((item: any, index: number) => (
+          <TableRow key={index}>
+            <TableCell>{item.model}</TableCell>
+            <TableCell>{item.type}</TableCell>
+            <TableCell>{item.prompt}</TableCell>
+            <TableCell>
+              {item.result && (
+                <>
+                  {item.result.sentiment} {item.result.score.toFixed(3) * 100}%
+                </>
+              )}
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+}
+
+
 export default function Playground() {
   const { data: session } = useSession({
     required: true,
   })
-
 
   const [prompt, setPrompt] = useState("");
   const [modelName, setModelName] = useState("bert");
   const [type, setType] = useState("sentiment");
   const [jsonDisplay, setJsonDisplay] = useState({})
   const [compute, setCompute] = useState({ computation_time: -1, device: '' }) // [time, device]
+  const [tableData, setTableData] = useState([])
 
-  // useEffect(() => {
-  //   // This effect will run when `prompt`, `model`, or `type` changes
-  //   console.log("Prompt:", prompt);
-  //   console.log("Model:", model);
-  //   console.log("Type:", type);
-  // }, [prompt, model, type]);
 
   async function onPredict() {
     const csrfToken = await getCsrfToken()
@@ -70,6 +114,39 @@ export default function Playground() {
     // remove last element
     data.pop()
     setJsonDisplay(data)
+
+    // Fetch prompt data
+    const res2 = await fetch(process.env.NEXT_PUBLIC_API + "/sentiment/webhook", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "X-XSRF-Token": csrfToken
+      },
+      credentials: "include",
+    });
+    const data2 = await res2.json();
+    console.log(data2);
+
+    // Format result data
+    const formattedData = data2?.prompts.map((prompt: any) => {
+      let maxScore = 0;
+      let sentiment = "";
+      for (const result of prompt.result.output) {
+        if (result.score > maxScore) {
+          maxScore = result.score;
+          sentiment = result.label;
+        }
+      }
+      return {
+        model: prompt.model_id == 1 ? "BERT" : "RoBERTa",
+        type: prompt.analysis_type,
+        prompt: prompt.input,
+        result: { sentiment, score: maxScore }
+      };
+    });
+
+    // Update state with formatted data
+    setTableData(formattedData);
   }
 
   function onCLear() {
@@ -214,6 +291,7 @@ export default function Playground() {
         <JsonView src={jsonDisplay} />
         <div className="flex-1">
           {/* sentiment: Exremely positive 99% */}
+          <TableComponent data={tableData} />
         </div>
       </div>
     </>

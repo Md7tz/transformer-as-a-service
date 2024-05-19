@@ -53,7 +53,26 @@ async def predict_sentiment(request: dict, jwt: Annotated[dict, Depends(get_jwt)
     return results
 
 
-@router.post("/webhook")
-async def webhook(request: dict):
-    print(request)
-    return {"message": "Webhook received"}
+@router.get("/webhook")
+async def webhook(jwt: Annotated[dict, Depends(get_jwt)], db = Depends(get_db)):
+    # Get user ID from JWT
+    user_id = jwt.get("user_id")
+
+    # Query prompts and their results for the user
+    prompts = db.query(Prompt).filter(Prompt.user_id == user_id).all()
+
+    # Construct response
+    response_data = []
+    for prompt in prompts:
+        response_data.append({
+            "id": prompt.id,
+            "user_id": prompt.user_id,
+            "model_id": prompt.model_id,
+            "result": prompt.result,
+            "input": prompt.input,
+            "analysis_type": prompt.analysis_type,
+            "created_at": prompt.created_at,
+            "deleted_at": prompt.deleted_at
+        })
+
+    return {"prompts": response_data}
