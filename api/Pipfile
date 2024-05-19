@@ -5,12 +5,12 @@ name = "pypi"
 
 [packages]
 fastapi = "*"
-uvicorn = {extras = ["standard"], version = "*"}
+uvicorn = {extras = ["standard"] }
 gunicorn = "*"
 psycopg2 = "*"
 sqlalchemy = "*"
 alembic = "*"
-databases = {extras = ["postgresql"], version = "*"}
+databases = {extras = ["postgresql"] }
 python-dotenv = "*"
 jwt = "*"
 pydantic-settings = "*"
@@ -23,6 +23,8 @@ httplib2 = "*"
 oauth2client = "*"
 google-auth = "*"
 requests = "*"
+transformers = "*"
+jose = "*"
 
 [dev-packages]
 

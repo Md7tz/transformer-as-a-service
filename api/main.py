@@ -2,16 +2,19 @@ from typing import Annotated
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
-from fastapi_nextauth_jwt import NextAuthJWT
 
 
 from dotenv import load_dotenv
 from config import get_settings
+from dependencies import get_jwt
 from auth.router import router as auth_router
+from sentiment.router import router as sentiment_router
+
 load_dotenv()
 
 app = FastAPI(root_path="/api")
 app.include_router(auth_router)
+app.include_router(sentiment_router)
 
 origins = [
     "http://localhost",
@@ -29,14 +32,10 @@ app.add_middleware(
 )
 
 app.add_middleware(SessionMiddleware, secret_key=get_settings().secret_key)
-JWT = NextAuthJWT(
-    secret=get_settings().secret_key,
-    csrf_prevention_enabled=True,
-    check_expiry=True
-)
+
 
 @app.get("/")
-def read_root(jwt: Annotated[dict, Depends(JWT)]):
+def read_root(jwt: Annotated[dict, Depends(get_jwt)]):
     print(jwt)
     return {"message": f"Hi {jwt['name']}. Greetings from fastapi!"}
 

@@ -59,7 +59,9 @@ export default function Layout({ view, children }: { view: string; children: Rea
       <div className="grid h-screen w-full pl-[56px]">
         <aside className="inset-y fixed  left-0 z-20 flex h-full flex-col border-r">
           <div className="border-b p-2">
-            <Button variant="outline" size="icon" aria-label="Home">
+            <Button variant="outline" size="icon" aria-label="Home"
+              onClick={() => router.push('/')}
+            >
               <Triangle className="size-5 fill-foreground" />
             </Button>
           </div>
@@ -72,6 +74,7 @@ export default function Layout({ view, children }: { view: string; children: Rea
                     size="icon"
                     className={`rounded-lg ${router.pathname.includes('playground') ? 'bg-muted' : ''}`}
                     aria-label="Playground"
+                    onClick={() => router.push('/playground')}
                   >
                     <SquareTerminal className="size-5" />
                   </Button>

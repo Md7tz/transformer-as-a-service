@@ -1,42 +1,183 @@
+import React, { useState, useEffect } from "react";
+import { getCsrfToken, useSession } from "next-auth/react";
+
+import JsonView from 'react18-json-view'
+import 'react18-json-view/src/style.css'
 import {
   Bird,
   Book,
   Bot,
-  Code2,
   CornerDownLeft,
-  LifeBuoy,
-  Mic,
-  Paperclip,
   Rabbit,
-  Settings,
-  Settings2,
-  Share,
-  SquareTerminal,
-  SquareUser,
-  Triangle,
-  Turtle,
   Undo,
-} from "lucide-react"
-
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-
-import { Label } from "@/components/ui/label"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 
-export default function Dashboard() {
+
+
+const MODELS = {
+  bert: {
+    name: "BERT",
+    description: "Bidirectional Encoder Representations from Transformers",
+  },
+  roberta: {
+    name: "RoBERTa",
+    description: "Robustly optimized BERT approach",
+  },
+};
+
+
+export function TableComponent({ data }: { data: any }) {
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Model</TableHead>
+          <TableHead>Type of Analysis</TableHead>
+          <TableHead>Prompt</TableHead>
+          <TableHead>Result</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {data?.map((item: any, index: number) => (
+          <TableRow key={index}>
+            <TableCell>{item.model}</TableCell>
+            <TableCell>{item.type}</TableCell>
+            <TableCell>{item.prompt}</TableCell>
+            <TableCell>
+              {item.result && (
+                <>
+                  {item.result.sentiment} {item.result.score.toFixed(3) * 100}%
+                </>
+              )}
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+}
+
+
+export default function Playground() {
+  const { data: session } = useSession({
+    required: true,
+  })
+
+  const [prompt, setPrompt] = useState("");
+  const [modelName, setModelName] = useState("bert");
+  const [type, setType] = useState("sentiment");
+  const [jsonDisplay, setJsonDisplay] = useState({})
+  const [compute, setCompute] = useState({ computation_time: -1, device: '' }) // [time, device]
+  const [tableData, setTableData] = useState([])
+
+
+  async function onPredict() {
+    const csrfToken = await getCsrfToken()
+    if (!csrfToken) {
+      throw new Error("No csrf token")
+    }
+    const response = await fetch(process.env.NEXT_PUBLIC_API + "/sentiment/predict", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-XSRF-Token": csrfToken
+      },
+      credentials: "include",
+
+      body: JSON.stringify({ prompt, model_name: modelName, type }),
+    });
+    const data = await response.json();
+    // get last element of data
+    console.log(data.slice(-1)[0]);
+    setCompute(data.slice(-1)[0])
+    // remove last element
+    data.pop()
+    setJsonDisplay(data)
+
+    // Fetch prompt data
+    const res2 = await fetch(process.env.NEXT_PUBLIC_API + "/sentiment/webhook", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "X-XSRF-Token": csrfToken
+      },
+      credentials: "include",
+    });
+    const data2 = await res2.json();
+    console.log(data2);
+
+    // Format result data
+    const formattedData = data2?.prompts.map((prompt: any) => {
+      let maxScore = 0;
+      let sentiment = "";
+      for (const result of prompt.result.output) {
+        if (result.score > maxScore) {
+          maxScore = result.score;
+          sentiment = result.label;
+        }
+      }
+      return {
+        model: prompt.model_id == 1 ? "BERT" : "RoBERTa",
+        type: prompt.analysis_type,
+        prompt: prompt.input,
+        result: { sentiment, score: maxScore }
+      };
+    });
+
+    // Update state with formatted data
+    setTableData(formattedData);
+  }
+
+  function onCLear() {
+    setPrompt("");
+    setModelName("bert");
+    setType("sentiment");
+    setJsonDisplay({})
+  }
+
+  function getModelsOptions() {
+    return Object.entries(MODELS).map(([key, value]) => (
+      <SelectItem key={key} value={key}>
+        <div className="flex items-start gap-3 text-muted-foreground">
+          <Bot className="size-5" />
+          <div className="grid gap-0.5">
+            <p>
+              Neural{" "}
+              <span className="font-medium text-foreground">{value.name}</span>
+            </p>
+            <p className="text-xs" data-description>
+              {value.description}
+            </p>
+          </div>
+        </div>
+      </SelectItem>
+    ));
+  }
+
   return (
     <>
-      <div
-        className="relative hidden flex-col items-start gap-8 md:flex" x-chunk="dashboard-03-chunk-0"
-      >
+      <div className="relative hidden flex-col items-start gap-8 md:flex" x-chunk="dashboard-03-chunk-0">
         <form className="grid w-full items-start gap-6">
           <fieldset className="grid gap-6 rounded-lg border p-4">
             <legend className="-ml-1 px-1 text-sm font-medium">
@@ -44,7 +185,7 @@ export default function Dashboard() {
             </legend>
             <div className="grid gap-3">
               <Label htmlFor="model">Model</Label>
-              <Select>
+              <Select value={modelName} onValueChange={(val) => setModelName(val)}>
                 <SelectTrigger
                   id="model"
                   className="items-start [&_[data-description]]:hidden"
@@ -52,58 +193,11 @@ export default function Dashboard() {
                   <SelectValue placeholder="Select a model" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="genesis">
-                    <div className="flex items-start gap-3 text-muted-foreground">
-                      <Rabbit className="size-5" />
-                      <div className="grid gap-0.5">
-                        <p>
-                          Neural{" "}
-                          <span className="font-medium text-foreground">
-                            Genesis
-                          </span>
-                        </p>
-                        <p className="text-xs" data-description>
-                          Our fastest model for general use cases.
-                        </p>
-                      </div>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="explorer">
-                    <div className="flex items-start gap-3 text-muted-foreground">
-                      <Bird className="size-5" />
-                      <div className="grid gap-0.5">
-                        <p>
-                          Neural{" "}
-                          <span className="font-medium text-foreground">
-                            Explorer
-                          </span>
-                        </p>
-                        <p className="text-xs" data-description>
-                          Performance and speed for efficiency.
-                        </p>
-                      </div>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="quantum">
-                    <div className="flex items-start gap-3 text-muted-foreground">
-                      <Turtle className="size-5" />
-                      <div className="grid gap-0.5">
-                        <p>
-                          Neural{" "}
-                          <span className="font-medium text-foreground">
-                            Quantum
-                          </span>
-                        </p>
-                        <p className="text-xs" data-description>
-                          The most powerful model for complex computations.
-                        </p>
-                      </div>
-                    </div>
-                  </SelectItem>
+                  {getModelsOptions()}
                 </SelectContent>
               </Select>
               <Label htmlFor="type">Analysis Type</Label>
-              <Select>
+              <Select value={type} onValueChange={(val) => setType(val)}>
                 <SelectTrigger
                   id="type"
                   className="items-start [&_[data-description]]:hidden"
@@ -116,7 +210,7 @@ export default function Dashboard() {
                       <Rabbit className="size-5" />
                       <div className="grid gap-0.5">
                         <p>
-                          Sentiment {" "}
+                          Sentiment{" "}
                           <span className="font-medium text-foreground">
                             Analysis
                           </span>
@@ -146,112 +240,60 @@ export default function Dashboard() {
                 </SelectContent>
               </Select>
             </div>
-            {/* <div className="grid gap-3">
-              <Label htmlFor="temperature">Temperature</Label>
-              <Input id="temperature" type="number" placeholder="0.4" />
-            </div> */}
-            {/* <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-3">
-                <Label htmlFor="top-p">Top P</Label>
-                <Input id="top-p" type="number" placeholder="0.7" />
-              </div>
-              <div className="grid gap-3">
-                <Label htmlFor="top-k">Top K</Label>
-                <Input id="top-k" type="number" placeholder="0.0" />
-              </div>
-            </div> */}
           </fieldset>
           <fieldset className="grid gap-6 rounded-lg border p-4">
             <legend className="-ml-1 px-1 text-sm font-medium">
               Messages
             </legend>
-            {/* <div className="grid gap-3">
-              <Label htmlFor="role">Role</Label>
-              <Select defaultValue="system">
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="system">System</SelectItem>
-                  <SelectItem value="user">User</SelectItem>
-                  <SelectItem value="assistant">Assistant</SelectItem>
-                </SelectContent>
-              </Select>
-            </div> */}
             <div className="grid gap-3">
               <Label htmlFor="content">Prompt</Label>
               <Textarea
                 id="prompt"
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
                 placeholder="Lorem ipsum..."
                 className="min-h-[9.5rem]"
               />
             </div>
           </fieldset>
           <div className="flex items-center gap-3">
-            <Button type="submit" className="gap-1.5">
-              Analyze
+            <Button type="button" className="gap-1.5" onClick={onPredict}>
+              Run
               <Book className="size-3.5" />
             </Button>
-            {/* clear */}
-            <Button type="reset" variant="outline" className="gap-1.5">
+            <Button type="reset" variant="outline" className="gap-1.5" onClick={onCLear}>
               Clear
               <Undo className="size-3.5" />
             </Button>
           </div>
+          <div className="flex items-center gap-3">
+            {compute.computation_time !== -1 && (
+              <span>
+                Computation time:{" "}
+                <span className="font-medium ">
+                  {compute.computation_time.toFixed(4)}s
+                </span>{" "}
+                on{" "}
+                <span className="font-medium">{compute.device}</span>.
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+            {/*  */}
+          </div>
+
         </form>
       </div>
       <div className="relative flex h-full min-h-[50vh] flex-col rounded-xl bg-muted/50 p-4 lg:col-span-2">
         <Badge variant="outline" className="absolute right-3 top-3">
           Output
         </Badge>
-        <div className="flex-1" />
-        <form
-          className="relative overflow-hidden rounded-lg border bg-background focus-within:ring-1 focus-within:ring-ring" x-chunk="dashboard-03-chunk-1"
-        >
-          {/* <Label htmlFor="message" className="sr-only">
-            Message
-          </Label>
-          <Textarea
-            id="message"
-            placeholder="Type your message here..."
-            className="min-h-12 resize-none border-0 p-3 shadow-none focus-visible:ring-0"
-          /> */}
-          {/* <div className="flex items-center p-3 pt-0">
-            <TooltipProvider>
-
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <Paperclip className="size-4" />
-                    <span className="sr-only">Attach file</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="top">Attach File</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
-            <TooltipProvider>
-
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <Mic className="size-4" />
-                    <span className="sr-only">Use Microphone</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="top">Use Microphone</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
-            <Button type="submit" size="sm" className="ml-auto gap-1.5">
-              Send Message
-              <CornerDownLeft className="size-3.5" />
-            </Button>
-          </div> */}
-
-          
-        </form>
+        <JsonView src={jsonDisplay} />
+        <div className="flex-1">
+          {/* sentiment: Exremely positive 99% */}
+          <TableComponent data={tableData} />
+        </div>
       </div>
     </>
-  )
+  );
 }

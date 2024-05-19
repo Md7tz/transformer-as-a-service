@@ -1,7 +1,16 @@
-# for db models
-
 import sqlalchemy
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, TIMESTAMP
+from sqlalchemy import (
+    Boolean,
+    Column,
+    ForeignKey,
+    Integer,
+    String,
+    TIMESTAMP,
+    JSON,
+    Text,
+    BigInteger,
+    func,
+)
 from sqlalchemy.orm import relationship
 
 from database import Base
@@ -11,7 +20,49 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
-    created_at = Column(TIMESTAMP(timezone=True), server_default=sqlalchemy.func.now())
-    updated_at = Column(TIMESTAMP(timezone=True), server_default=sqlalchemy.func.now(), onupdate=sqlalchemy.func.now())
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
+    updated_at = Column(
+        TIMESTAMP(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
     deleted_at = Column(TIMESTAMP(timezone=True), nullable=True)
-    
+
+class Model(Base):
+    __tablename__ = 'models'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(255), nullable=False)
+    description = Column(String(255), nullable=False)
+    type = Column(String(50), nullable=False)
+    properties = Column(JSON, nullable=False)
+
+    def __repr__(self):
+        return f"<Model(id={self.id}, name={self.name}, description={self.description}, type={self.type}, properties={self.properties})>"
+
+class Result(Base):
+    __tablename__ = "results"
+
+    id = Column(Integer, primary_key=True)
+    output = Column(JSON, nullable=False)
+
+    def __repr__(self):
+        return f"<Result(id={self.id}, output={self.output})>"
+
+
+class Prompt(Base):
+    __tablename__ = "prompts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(BigInteger, ForeignKey("users.id"), nullable=False)
+    model_id = Column(BigInteger, ForeignKey("models.id"), nullable=False)
+    result_id = Column(BigInteger, ForeignKey("results.id"), nullable=True)
+    input = Column(Text, nullable=False)
+    analysis_type = Column(String(50), nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
+    deleted_at = Column(TIMESTAMP(timezone=True), nullable=True)
+
+    # Define relationship properties
+    user = relationship("User", backref="prompts")
+    model = relationship("Model", backref="prompts")
+    result = relationship("Result", backref="prompts")
