@@ -4,10 +4,13 @@ from fastapi_nextauth_jwt import NextAuthJWT
 from config import get_settings
 from jose import JWTError
 from models import User
+from dotenv import load_dotenv
+
+load_dotenv()
 
 JWT = NextAuthJWT(
     secret=get_settings().secret_key,
-    csrf_prevention_enabled=True,
+    csrf_prevention_enabled=False,
     check_expiry=True
 )
 
