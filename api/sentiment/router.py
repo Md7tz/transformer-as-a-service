@@ -1,7 +1,7 @@
 from typing import Annotated
 from fastapi import APIRouter, HTTPException, Depends
 from dependencies import get_jwt, get_db
-from models import Prompt, Result
+from models import Prompt, Result, Model
 from constants import ModelType
 
 from .processor import SentimentProcessor
@@ -45,6 +45,14 @@ async def predict_sentiment(request: dict, jwt: Annotated[dict, Depends(get_jwt)
     
     return results
 
+@router.get("/models")
+async def get_models(jwt: Annotated[dict, Depends(get_jwt)], db = Depends(get_db)):
+    try:
+        models = db.query(Model).filter(Model.type == "sentiment").all()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Failed to get models") from e
+    
+    return {"models": models}
 
 @router.get("/webhook")
 async def webhook(jwt: Annotated[dict, Depends(get_jwt)], db = Depends(get_db)):
