@@ -19,6 +19,7 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
+    role_id = Column(Integer, ForeignKey("roles.id"), nullable=False)
     username = Column(String, unique=True, index=True)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
     updated_at = Column(
@@ -27,6 +28,19 @@ class User(Base):
         onupdate=func.now(),
     )
     deleted_at = Column(TIMESTAMP(timezone=True), nullable=True)
+    
+    # Define relationship properties
+    role = relationship("Role")
+
+class Role(Base):
+    __tablename__ = "roles"
+
+    id = Column(Integer, primary_key=True)
+    type = Column(String(50), nullable=False, default="user")
+
+    def __repr__(self):
+        return f"<Role(id={self.id}, type={self.type})>"
+
 
 class Model(Base):
     __tablename__ = 'models'
