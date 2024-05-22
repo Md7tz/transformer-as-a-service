@@ -3,18 +3,20 @@ from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
-
 from dotenv import load_dotenv
 from config import get_settings
 from dependencies import get_jwt
+
 from auth.router import router as auth_router
 from sentiment.router import router as sentiment_router
+from ner.router import router as ner_router
 
 load_dotenv()
 
 app = FastAPI(root_path="/api")
 app.include_router(auth_router)
 app.include_router(sentiment_router)
+app.include_router(ner_router)
 
 origins = [
     "http://localhost",
