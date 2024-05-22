@@ -48,6 +48,7 @@ import {
 
 import { signIn, signOut, useSession } from "next-auth/react"
 import { useRouter } from 'next/router';
+import TokensTracker from "@/components/tokens"
 
 export default function Layout({ view, children }: { view: string; children: React.ReactNode }) {
 
@@ -58,7 +59,7 @@ export default function Layout({ view, children }: { view: string; children: Rea
   if (router.pathname.includes('auth')) {
     return (
       <div className="grid h-screen w-full">
-      {children}
+        {children}
       </div>
     )
   }
@@ -320,17 +321,19 @@ export default function Layout({ view, children }: { view: string; children: Rea
                 </form>
               </DrawerContent>
             </Drawer>
+            {session?.user?.name && <TokensTracker />}
+
             <Button variant="outline" size="sm" className="ml-auto gap-1.5 text-sm">
               {status === "authenticated" ? (
                 <>
                   <p className="color-red">Signed in as {session?.user?.name}</p>
-                  <a onClick={()=> signOut()}>
+                  <a onClick={() => signOut()}>
                     <LogOutIcon className="size-3.5" />
                   </a>
                 </>
               ) : (
                 <>
-                  <a onClick={()=> signIn()}>
+                  <a onClick={() => signIn()}>
                     <LogInIcon className="size-3.5" />
                   </a>
                   <p>
