@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { getCsrfToken, useSession } from "next-auth/react";
+import nookies from 'nookies'
 
 import JsonView from 'react18-json-view'
 import 'react18-json-view/src/style.css'
@@ -32,6 +33,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { GetServerSideProps } from "next";
 
 
 
@@ -79,7 +81,7 @@ export function TableComponent({ data }: { data: any }) {
 }
 
 
-export default function Playground() {
+export default function Playground(props: any) {
   const { data: session } = useSession({
     required: true,
   })
@@ -90,7 +92,18 @@ export default function Playground() {
   const [jsonDisplay, setJsonDisplay] = useState({})
   const [compute, setCompute] = useState({ computation_time: -1, device: '' }) // [time, device]
   const [tableData, setTableData] = useState([])
+  const [models, setModels] = useState([])
 
+  // if the props contain models, update the state
+  useEffect(() => {
+    if (type === "sentiment" && props?.sentimentModels) {
+      setModels(props.sentimentModels.models);
+      setModelName(props.sentimentModels.models[0]?.name);
+    } else if (type === "ner" && props?.nerModels) {
+      setModels(props.nerModels.models);
+      setModelName(props.nerModels.models[0]?.name);
+    }
+  }, [props, type]);
 
   async function onPredict() {
     const csrfToken = await getCsrfToken()
@@ -128,10 +141,10 @@ export default function Playground() {
 
     // persist the last element of data (computation time and device)
     setCompute(data.slice(-1)[0])
-    
+
     // remove last element
     data.pop()
-    
+
     // Update state with formatted data
     setJsonDisplay(data)
 
@@ -177,17 +190,17 @@ export default function Playground() {
   }
 
   function getModelsOptions() {
-    return Object.entries(MODELS).map(([key, value]) => (
-      <SelectItem key={key} value={key}>
+    return models.map((model: any) => (
+      <SelectItem key={model?.id} value={model?.name}>
         <div className="flex items-start gap-3 text-muted-foreground">
           <Bot className="size-5" />
           <div className="grid gap-0.5">
             <p>
               Neural{" "}
-              <span className="font-medium text-foreground">{value.name}</span>
+              <span className="font-medium text-foreground">{model?.name}</span>
             </p>
             <p className="text-xs" data-description>
-              {value.description}
+              {model?.description}
             </p>
           </div>
         </div>
@@ -309,7 +322,7 @@ export default function Playground() {
           Output
         </Badge>
         <JsonView src={jsonDisplay} />
-        
+
         <div className="flex-1">
           {/* sentiment: Exremely positive 99% */}
           <TableComponent data={tableData} />
@@ -318,3 +331,49 @@ export default function Playground() {
     </>
   );
 }
+
+
+export const getServerSideProps: GetServerSideProps = (async (ctx) => {
+  // const csrfToken = await getCsrfToken()
+  // if (!csrfToken) throw new Error("No csrf token");
+
+  const cookies = nookies.get(ctx)
+  // console.log(cookies)
+
+  // fetch models from the API
+  try {
+    const response1 = await fetch(process.env.NEXT_PUBLIC_API + "/sentiment/models", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Cookie": "next-auth.csrf-token=" + cookies["next-auth.csrf-token"] + "; next-auth.session-token=" + cookies["next-auth.session-token"] + ";"
+      },
+      credentials: "include",
+    });
+
+    const response2 = await fetch(process.env.NEXT_PUBLIC_API + "/ner/models", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Cookie": "next-auth.csrf-token=" + cookies["next-auth.csrf-token"] + "; next-auth.session-token=" + cookies["next-auth.session-token"] + ";"
+      },
+      credentials: "include",
+    });
+
+    const sentimentModels = await response1.json();
+    const nerModels = await response2.json();
+
+    return {
+      props: {
+        sentimentModels,
+        nerModels,
+      },
+    };
+  }
+  catch (error) {
+    console.error(error);
+    return {
+      props: {},
+    };
+  }
+}) 
