@@ -46,7 +46,7 @@ import {
   TooltipProvider
 } from "@/components/ui/tooltip"
 
-import { useSession } from "next-auth/react"
+import { signIn, signOut, useSession } from "next-auth/react"
 import { useRouter } from 'next/router';
 
 export default function Layout({ view, children }: { view: string; children: React.ReactNode }) {
@@ -54,6 +54,14 @@ export default function Layout({ view, children }: { view: string; children: Rea
   const { data: session, status } = useSession()
   const router = useRouter();
 
+  // check if this is auth page if it is then don't show the header
+  if (router.pathname.includes('auth')) {
+    return (
+      <div className="grid h-screen w-full">
+      {children}
+      </div>
+    )
+  }
   return (
     <>
       <div className="grid h-screen w-full pl-[56px]">
@@ -316,13 +324,13 @@ export default function Layout({ view, children }: { view: string; children: Rea
               {status === "authenticated" ? (
                 <>
                   <p className="color-red">Signed in as {session?.user?.name}</p>
-                  <a href="/api/auth/signout">
+                  <a onClick={()=> signOut()}>
                     <LogOutIcon className="size-3.5" />
                   </a>
                 </>
               ) : (
                 <>
-                  <a href="/api/auth/signin">
+                  <a onClick={()=> signIn()}>
                     <LogInIcon className="size-3.5" />
                   </a>
                   <p>
