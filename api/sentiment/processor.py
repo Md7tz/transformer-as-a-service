@@ -4,7 +4,6 @@ from typing import Optional
 from pydantic import BaseModel
 from time import time
 import torch
-from enum import IntEnum, auto
 
 class SentimentProcessor:
     def __init__(self):
@@ -50,8 +49,3 @@ class SentimentProcessor:
 
         return results
         
-
-class ModelType(IntEnum):
-    CLASSIFICATION = auto()
-    NER = auto()
-    

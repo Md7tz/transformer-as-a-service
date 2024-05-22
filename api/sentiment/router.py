@@ -1,21 +1,16 @@
 from typing import Annotated
-from fastapi import APIRouter, HTTPException
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
-from fastapi import Depends
-from .processor import SentimentProcessor, ModelType
+from fastapi import APIRouter, HTTPException, Depends
 from dependencies import get_jwt, get_db
 from models import Prompt, Result
+from constants import ModelType
 
+from .processor import SentimentProcessor
 processor = SentimentProcessor()
 
 router = APIRouter(
     prefix="/sentiment",
     tags=["sentiment"],
 )
-
-# Load model directly
-tokenizer = AutoTokenizer.from_pretrained("kwang123/bert-sentiment-analysis")
-model = AutoModelForSequenceClassification.from_pretrained("kwang123/bert-sentiment-analysis")
 
 @router.get("/")
 async def read_root():
@@ -27,9 +22,7 @@ async def predict_sentiment(request: dict, jwt: Annotated[dict, Depends(get_jwt)
     prompt = request.get("prompt").strip()
     model_name = request.get("model_name")
     analysis_type = request.get("type")
-    # print(jwt)
-    # print(f"prompt: {prompt}")
-    # print(f"model_name: {model_name}")
+
     if not model_name:
         raise HTTPException(status_code=400, detail="missing model")
     elif not prompt:
