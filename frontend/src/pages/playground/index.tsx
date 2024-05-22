@@ -93,6 +93,7 @@ export default function Playground(props: any) {
   const [compute, setCompute] = useState({ computation_time: -1, device: '' }) // [time, device]
   const [tableData, setTableData] = useState([])
   const [models, setModels] = useState([])
+  const [allowDownload, setAllowDownload] = useState(false);
 
   // if the props contain models, update the state
   useEffect(() => {
@@ -180,6 +181,7 @@ export default function Playground(props: any) {
 
     // Update state with formatted data
     setTableData(formattedData);
+    setAllowDownload(true)
   }
 
   function onCLear() {
@@ -187,7 +189,19 @@ export default function Playground(props: any) {
     setModelName("bert");
     setType("sentiment");
     setJsonDisplay({})
+    setAllowDownload(false);
   }
+
+  const onDownload = () => {
+    const jsonString = JSON.stringify(jsonDisplay, null, 2);
+    const blob = new Blob([jsonString], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "inference.json";
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   function getModelsOptions() {
     return models.map((model: any) => (
@@ -319,7 +333,18 @@ export default function Playground(props: any) {
       </div>
       <div className="relative flex h-full min-h-[50vh] flex-col rounded-xl bg-muted/50 p-4 lg:col-span-2">
         <Badge variant="outline" className="absolute right-3 top-3">
-          Output
+          Output &nbsp;
+          { allowDownload && (
+
+            <Button
+              className="p-0 m-0 bg-transparent dark:bg-gray-900 dark:text-gray-50 hover:bg-gray-100 dark:hover:bg-gray-800"
+              size="x-sm"
+              variant="link"
+              onClick={onDownload}
+            >
+              <DownloadIcon className="w-4 h-4" />
+            </Button>
+          )}
         </Badge>
         <JsonView src={jsonDisplay} />
 
@@ -330,6 +355,27 @@ export default function Playground(props: any) {
       </div>
     </>
   );
+}
+
+function DownloadIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" x2="12" y1="15" y2="3" />
+    </svg>
+  )
 }
 
 
