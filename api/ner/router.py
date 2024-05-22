@@ -3,22 +3,21 @@ from fastapi import APIRouter, HTTPException, Depends
 from dependencies import get_jwt, get_db
 from models import Prompt, Result
 from constants import ModelType
-
-from .processor import SentimentProcessor
-processor = SentimentProcessor()
+from .processor import NERProcessor
+processor = NERProcessor()
 
 router = APIRouter(
-    prefix="/sentiment",
-    tags=["sentiment"],
+    prefix="/ner",
+    tags=["ner"],
 )
 
 @router.get("/")
 async def read_root():
-    return {"message": "Sentiment Analysis API"}
+    return {"message": "NER API"}
 
 
 @router.post("/predict")
-async def predict_sentiment(request: dict, jwt: Annotated[dict, Depends(get_jwt)], db = Depends(get_db)):
+async def predict_ner(request: dict, jwt: Annotated[dict, Depends(get_jwt)], db = Depends(get_db)):
     prompt = request.get("prompt").strip()
     model_name = request.get("model_name")
     analysis_type = request.get("type")
@@ -39,7 +38,7 @@ async def predict_sentiment(request: dict, jwt: Annotated[dict, Depends(get_jwt)
     db.add(result)
     db.commit()
 
-    prompt = Prompt(user_id=user_id, model_id=ModelType.CLASSIFICATION, result_id=result.id, input=prompt, analysis_type=analysis_type)
+    prompt = Prompt(user_id=user_id, model_id=ModelType.NER, result_id=result.id, input=prompt, analysis_type=analysis_type)
     db.add(prompt)
     db.commit()
     
