@@ -94,29 +94,49 @@ export default function Playground() {
 
   async function onPredict() {
     const csrfToken = await getCsrfToken()
-    if (!csrfToken) {
-      throw new Error("No csrf token")
-    }
-    const response = await fetch(process.env.NEXT_PUBLIC_API + "/sentiment/predict", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-XSRF-Token": csrfToken
-      },
-      credentials: "include",
+    let response = null;
+    let data = null;
 
-      body: JSON.stringify({ prompt, model_name: modelName, type }),
-    });
-    const data = await response.json();
-    // get last element of data
-    console.log(data.slice(-1)[0]);
+    if (!csrfToken) throw new Error("No csrf token");
+
+    switch (type) {
+      case "sentiment":
+        response = await fetch(process.env.NEXT_PUBLIC_API + "/sentiment/predict", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-XSRF-Token": csrfToken
+          },
+          credentials: "include",
+          body: JSON.stringify({ prompt, model_name: modelName, type }),
+        });
+        break;
+      case "ner":
+        response = await fetch(process.env.NEXT_PUBLIC_API + "/ner/predict", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-XSRF-Token": csrfToken
+          },
+          credentials: "include",
+          body: JSON.stringify({ prompt, model_name: modelName, type }),
+        });
+        break;
+    }
+
+    data = await response?.json();
+
+    // persist the last element of data (computation time and device)
     setCompute(data.slice(-1)[0])
+    
     // remove last element
     data.pop()
+    
+    // Update state with formatted data
     setJsonDisplay(data)
 
     // Fetch prompt data
-    const res2 = await fetch(process.env.NEXT_PUBLIC_API + "/sentiment/webhook", {
+    const webhookResponse = await fetch(process.env.NEXT_PUBLIC_API + "/sentiment/webhook", {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -124,11 +144,11 @@ export default function Playground() {
       },
       credentials: "include",
     });
-    const data2 = await res2.json();
-    console.log(data2);
+    const webhookData = await webhookResponse.json();
+    // console.log(webhookData);
 
     // Format result data
-    const formattedData = data2?.prompts.map((prompt: any) => {
+    const formattedData = webhookData?.prompts.map((prompt: any) => {
       let maxScore = 0;
       let sentiment = "";
       for (const result of prompt.result.output) {
@@ -289,6 +309,7 @@ export default function Playground() {
           Output
         </Badge>
         <JsonView src={jsonDisplay} />
+        
         <div className="flex-1">
           {/* sentiment: Exremely positive 99% */}
           <TableComponent data={tableData} />
