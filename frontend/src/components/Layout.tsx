@@ -19,7 +19,7 @@ import {
   LogOutIcon,
 } from "lucide-react"
 import { Toaster } from "@/components/ui/sonner"
-
+import { Sheet, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -148,13 +148,13 @@ export default function Layout({ view, children }: { view: string; children: Rea
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button                    
+                  <Button
                     variant="ghost"
                     size="icon"
                     className={`rounded-lg ${router.pathname.includes('users') ? 'bg-muted' : ''}`}
                     aria-label="Users"
                     onClick={() => router.push('/admin/users')}
-                  
+
                   >
                     <Settings2 className="size-5" />
                   </Button>
@@ -186,7 +186,10 @@ export default function Layout({ view, children }: { view: string; children: Rea
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button
+                  <Sheet>
+                    <SheetTrigger asChild>
+                      {/* <Button variant="outline">Open</Button> */}
+                      <Button
                     variant="ghost"
                     size="icon"
                     className="mt-auto rounded-lg"
@@ -194,6 +197,36 @@ export default function Layout({ view, children }: { view: string; children: Rea
                   >
                     <SquareUser className="size-5" />
                   </Button>
+                    </SheetTrigger>
+                    <SheetContent>
+                      <SheetHeader>
+                        <SheetTitle>Edit profile</SheetTitle>
+                        <SheetDescription>
+                          Make changes to your profile here. Click save when you're done.
+                        </SheetDescription>
+                      </SheetHeader>
+                      <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="name" className="text-right">
+                            Name
+                          </Label>
+                          <Input id="name" value="Pedro Duarte" className="col-span-3" />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="username" className="text-right">
+                            Username
+                          </Label>
+                          <Input id="username" value="@peduarte" className="col-span-3" />
+                        </div>
+                      </div>
+                      <SheetFooter>
+                        <SheetClose asChild>
+                          <Button type="submit">Save changes</Button>
+                        </SheetClose>
+                      </SheetFooter>
+                    </SheetContent>
+                  </Sheet>
+
                 </TooltipTrigger>
                 <TooltipContent side="right" sideOffset={5}>
                   Account
