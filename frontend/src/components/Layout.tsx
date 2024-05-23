@@ -50,11 +50,37 @@ import {
 import { signIn, signOut, useSession } from "next-auth/react"
 import { useRouter } from 'next/router';
 import TokensTracker from "@/components/tokens"
+import { toast } from "sonner"
+import { useState } from "react"
 
 export default function Layout({ view, children }: { view: string; children: React.ReactNode }) {
 
+  const [user, setUser] = useState({name: '', username: ''})
   const { data: session, status } = useSession()
   const router = useRouter();
+
+  const getMe = async () => {
+    try {
+      const response = await fetch(process.env.NEXT_PUBLIC_API + "/users/me", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user);
+        console.log(data);
+        toast.success("User fetched successfully");
+      }
+    }
+    catch (error) {
+      console.error(error);
+      toast.error("Failed to fetch user");
+    }
+  }
 
   // check if this is auth page if it is then don't show the header
   if (router.pathname.includes('auth')) {
@@ -194,6 +220,7 @@ export default function Layout({ view, children }: { view: string; children: Rea
                     size="icon"
                     className="mt-auto rounded-lg"
                     aria-label="Account"
+                    onClick={() => getMe()}
                   >
                     <SquareUser className="size-5" />
                   </Button>
@@ -207,21 +234,21 @@ export default function Layout({ view, children }: { view: string; children: Rea
                       </SheetHeader>
                       <div className="grid gap-4 py-4">
                         <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="name" className="text-right">
-                            Name
+                          <Label htmlFor="role" className="text-right">
+                            Role
                           </Label>
-                          <Input id="name" value="Pedro Duarte" className="col-span-3" />
+                          <Input disabled id="role" value={user?.role?.type} className="col-span-3" />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                           <Label htmlFor="username" className="text-right">
                             Username
                           </Label>
-                          <Input id="username" value="@peduarte" className="col-span-3" />
+                          <Input disabled id="username" value={user?.username} className="col-span-3" />
                         </div>
                       </div>
                       <SheetFooter>
                         <SheetClose asChild>
-                          <Button type="submit">Save changes</Button>
+                          <Button disabled type="submit">Save changes</Button>
                         </SheetClose>
                       </SheetFooter>
                     </SheetContent>
