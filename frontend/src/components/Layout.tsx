@@ -18,6 +18,7 @@ import {
   LogInIcon,
   LogOutIcon,
 } from "lucide-react"
+import { Toaster } from "@/components/ui/sonner"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -348,6 +349,7 @@ export default function Layout({ view, children }: { view: string; children: Rea
           </header>
           <main className="grid flex-1 gap-4 overflow-auto p-4 md:grid-cols-2 lg:grid-cols-3">
             {children}
+            <Toaster />
           </main>
         </div>
       </div>
