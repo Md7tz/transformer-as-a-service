@@ -147,11 +147,13 @@ export default function Layout({ view, children }: { view: string; children: Rea
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button
+                  <Button                    
                     variant="ghost"
                     size="icon"
-                    className="rounded-lg"
-                    aria-label="Settings"
+                    className={`rounded-lg ${router.pathname.includes('users') ? 'bg-muted' : ''}`}
+                    aria-label="Users"
+                    onClick={() => router.push('/admin/users')}
+                  
                   >
                     <Settings2 className="size-5" />
                   </Button>

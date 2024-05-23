@@ -4,7 +4,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export default function Home() {
   return (
-    <div className=" flex items-center justify-center p-10 text-center font-inter col-span-full">
+    <div className="flex items-center justify-center p-10 text-center font-inter col-span-full">
       <div>
         <h1 className="text-3xl font-bold mb-4">Transformers as a Service (TaaS)</h1>
         <p className="mb-8">
