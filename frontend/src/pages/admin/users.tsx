@@ -23,8 +23,9 @@ export default function Users(props: any) {
             if (response.ok) {
                 const data = await response.json();
                 toast.success(data.message);
-                await getUsers();
-                // setUsers(users.filter((user: any) => user.id !== id))
+                setTimeout(() => {
+                    getUsers();
+                }, 1000);
             }
         }
         catch (error) {
@@ -55,6 +56,39 @@ export default function Users(props: any) {
         }
     }
 
+    const updateUserToken = async (userId: string, amount: number) => {
+        try {
+            console.log(userId, amount)
+            console.log(typeof userId, typeof amount)
+            const response = await fetch(process.env.NEXT_PUBLIC_API + "/users/token", {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                credentials: "include",
+                body: JSON.stringify({ user_id: userId, amount: amount }),
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                toast.success(data.message);
+                setTimeout(() => {
+                    getUsers();
+                }, 1000)
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to update user token");
+        }
+    };
+
+    const handleTokenKeyDown = (e: any, userId: string) => {
+        if (e.key === 'Enter') {
+            const tokenAmount = parseInt(e.target.value);
+            updateUserToken(userId, tokenAmount);
+        }
+    };
+
     return (
         <div className="col-span-full container mx-auto px-4 py-8">
             <div className="flex items-center justify-between mb-6">
@@ -71,6 +105,7 @@ export default function Users(props: any) {
                             <TableHead>Created</TableHead>
                             <TableHead>Update</TableHead>
                             <TableHead>Deleted</TableHead>
+                            <TableHead>Role</TableHead>
                             <TableHead>Actions</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -90,7 +125,12 @@ export default function Users(props: any) {
                                         </TableCell>
                                         <TableCell>{user.username}</TableCell>
                                         <TableCell>
-                                            <Input className="w-24 text-right" defaultValue={user.tokens || 100} type="number" />
+                                            <Input
+                                                className="w-24 text-right"
+                                                defaultValue={user.token?.amount || 100}
+                                                type="number"
+                                                onKeyDown={(e) => handleTokenKeyDown(e, user.id)}
+                                            />
                                         </TableCell>
                                         <TableCell>
                                             <span>{new Date(user.created_at).toLocaleString()}</span>
@@ -100,6 +140,9 @@ export default function Users(props: any) {
                                         </TableCell>
                                         <TableCell>
                                             <span>{user.deleted_at ? new Date(user.deleted_at).toLocaleString() : '-'}</span>
+                                        </TableCell>
+                                        <TableCell>
+                                            {user?.role?.type}
                                         </TableCell>
                                         <TableCell>
                                             <Button className="text-red-500" size="icon" variant="ghost" onClick={() => onDelete(user.id)}>
