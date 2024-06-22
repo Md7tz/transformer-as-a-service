@@ -11,7 +11,7 @@ load_dotenv()
 JWT = NextAuthJWT(
     secret=get_settings().secret_key,
     csrf_prevention_enabled=False,
-    check_expiry=True
+    check_expiry=True,
 )
 
 def get_db():
@@ -35,6 +35,7 @@ def get_jwt(jwt: dict = Depends(JWT), db = Depends(get_db)):
         
         # Add the user_id to the JWT payload
         jwt["user_id"] = user.id
+        jwt["role"] = user.role.type
 
         return jwt
     except JWTError as e:

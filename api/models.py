@@ -31,6 +31,7 @@ class User(Base):
     
     # Define relationship properties
     role = relationship("Role", backref="users")
+    token = relationship("Token", backref="users", uselist=False)
 
     def delete(self):
         if not self.deleted_at:
@@ -50,6 +51,20 @@ class Role(Base):
     
     role = relationship("User", backref="roles")
 
+class Token(Base):
+    __tablename__ = "tokens"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(BigInteger, ForeignKey("users.id"), nullable=False)
+    amount = Column(Integer, nullable=False)
+    reserve = Column(Integer, nullable=False)
+    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
+
+    def __repr__(self):
+        return f"<Token(id={self.id}, user_id={self.user_id}, amount={self.amount}, reserve={self.reserve}, updated_at={self.updated_at})>"
+
+    user = relationship("User", backref="tokens")
+    
 class Model(Base):
     __tablename__ = 'models'
 
