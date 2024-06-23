@@ -5,16 +5,27 @@
  */
 import { Progress } from "@/components/ui/progress"
 
-export default function TokensTracker() {
-  return (
-        <div className="flex items-center gap-2 ms-auto">
-          <div className="text-gray-500 dark:text-gray-400">
-            <span className="font-medium">25</span>/ 100 tokens{"\n                "}
-          </div>
-          <Progress className="w-32" max={100} value={25} />
-        </div>
-  )
+interface TokensTrackerProps {
+  token?: {
+    amount?: number;
+    reserve?: number;
+  };
 }
+
+const TokensTracker: React.FC<TokensTrackerProps> = ({ token }) => {
+  const amount = token?.amount ?? 0;
+  const reserve = token?.reserve ?? 0;
+
+  return (
+    <div className="flex items-center gap-2 ms-auto">
+      <div className="text-gray-500 dark:text-gray-400">
+        <span className="font-medium">{amount}</span>/ {100 + reserve} tokens{"\n"}
+      </div>
+      <Progress className="w-32" max={100 + reserve} value={amount + reserve} />
+    </div>
+  );
+};
+export default TokensTracker;
 
 function KeyIcon(props: React.SVGProps<SVGSVGElement>) {
   return (

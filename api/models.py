@@ -19,7 +19,7 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    role_id = Column(Integer, ForeignKey("roles.id"), nullable=False)
+    role_id = Column(BigInteger, ForeignKey("roles.id"), nullable=False)
     username = Column(String, unique=True, index=True)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
     updated_at = Column(
@@ -30,7 +30,15 @@ class User(Base):
     deleted_at = Column(TIMESTAMP(timezone=True), nullable=True)
     
     # Define relationship properties
-    role = relationship("Role")
+    role = relationship("Role", backref="users")
+    token = relationship("Token", backref="users", uselist=False)
+
+    def delete(self):
+        if not self.deleted_at:
+            self.deleted_at = func.now()
+        else:
+            self.deleted_at = None
+
 
 class Role(Base):
     __tablename__ = "roles"
@@ -40,8 +48,23 @@ class Role(Base):
 
     def __repr__(self):
         return f"<Role(id={self.id}, type={self.type})>"
+    
+    role = relationship("User", backref="roles")
 
+class Token(Base):
+    __tablename__ = "tokens"
 
+    id = Column(Integer, primary_key=True)
+    user_id = Column(BigInteger, ForeignKey("users.id"), nullable=False)
+    amount = Column(Integer, nullable=False)
+    reserve = Column(Integer, nullable=False)
+    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
+
+    def __repr__(self):
+        return f"<Token(id={self.id}, user_id={self.user_id}, amount={self.amount}, reserve={self.reserve}, updated_at={self.updated_at})>"
+
+    user = relationship("User", backref="tokens")
+    
 class Model(Base):
     __tablename__ = 'models'
 

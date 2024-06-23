@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { signIn } from "next-auth/react";
+import { toast } from "sonner";
 
 export default function SignIn() {
   return (
@@ -11,11 +12,27 @@ export default function SignIn() {
         </p>
       </div>
       <div className="space-y-4">
-        <Button className="w-full" variant="outline" onClick={() => signIn("google", { callbackUrl: '/' })}>
+        <Button
+          className="w-full"
+          variant="outline"
+          onClick={() =>
+            signIn("google", { callbackUrl: '/?redirect=success' }).catch(() =>
+              toast.error("Google sign-in failed")
+            )
+          }
+        >
           <ChromeIcon className="mr-2 h-5 w-5" />
           Sign in with Google
         </Button>
-        <Button className="w-full" variant="outline" onClick={() => signIn("github", { callbackUrl: '/' })}>
+        <Button
+          className="w-full"
+          variant="outline"
+          onClick={() =>
+            signIn("github", { callbackUrl: '/?redirect=success' }).catch(() =>
+              toast.error("GitHub sign-in failed")
+            )
+          }
+        >
           <GithubIcon className="mr-2 h-5 w-5" />
           Sign in with GitHub
         </Button>

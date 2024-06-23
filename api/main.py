@@ -10,6 +10,7 @@ from dependencies import get_jwt
 from auth.router import router as auth_router
 from sentiment.router import router as sentiment_router
 from ner.router import router as ner_router
+from user.router import router as user_router
 
 load_dotenv()
 
@@ -17,6 +18,7 @@ app = FastAPI(root_path="/api")
 app.include_router(auth_router)
 app.include_router(sentiment_router)
 app.include_router(ner_router)
+app.include_router(user_router)
 
 origins = [
     "http://localhost",

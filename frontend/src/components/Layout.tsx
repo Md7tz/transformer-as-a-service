@@ -18,7 +18,8 @@ import {
   LogInIcon,
   LogOutIcon,
 } from "lucide-react"
-
+import { Toaster } from "@/components/ui/sonner"
+import { Sheet, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -49,11 +50,41 @@ import {
 import { signIn, signOut, useSession } from "next-auth/react"
 import { useRouter } from 'next/router';
 import TokensTracker from "@/components/tokens"
+import { toast } from "sonner"
+import { useEffect, useState } from "react"
 
 export default function Layout({ view, children }: { view: string; children: React.ReactNode }) {
 
+  const [user, setUser] = useState({ name: '', username: '', token: { amount: 0 }, role: { type: "" } })
   const { data: session, status } = useSession()
   const router = useRouter();
+
+  useEffect(() => {
+    getMe();
+  }, [])
+
+  const getMe = async () => {
+    try {
+      const response = await fetch(process.env.NEXT_PUBLIC_API + "/users/me", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user);
+        console.log(data);
+        toast.success("User fetched successfully");
+      }
+    }
+    catch (error) {
+      console.error(error);
+      toast.error("Failed to fetch user");
+    }
+  }
 
   // check if this is auth page if it is then don't show the header
   if (router.pathname.includes('auth')) {
@@ -144,23 +175,27 @@ export default function Layout({ view, children }: { view: string; children: Rea
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="rounded-lg"
-                    aria-label="Settings"
-                  >
-                    <Settings2 className="size-5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="right" sideOffset={5}>
-                  Settings
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            {user.role?.type === "admin" && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={`rounded-lg ${router.pathname.includes('users') ? 'bg-muted' : ''}`}
+                      aria-label="Users"
+                      onClick={() => router.push('/admin/users')}
+
+                    >
+                      <Settings2 className="size-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right" sideOffset={5}>
+                    Users
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
           </nav>
           <nav className="mt-auto grid gap-1 p-2">
             <TooltipProvider>
@@ -183,14 +218,48 @@ export default function Layout({ view, children }: { view: string; children: Rea
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="mt-auto rounded-lg"
-                    aria-label="Account"
-                  >
-                    <SquareUser className="size-5" />
-                  </Button>
+                  <Sheet>
+                    <SheetTrigger asChild>
+                      {/* <Button variant="outline">Open</Button> */}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="mt-auto rounded-lg"
+                        aria-label="Account"
+                      // onClick={() => getMe()}
+                      >
+                        <SquareUser className="size-5" />
+                      </Button>
+                    </SheetTrigger>
+                    <SheetContent>
+                      <SheetHeader>
+                        <SheetTitle>Edit profile</SheetTitle>
+                        <SheetDescription>
+                          Make changes to your profile here. Click save when you're done.
+                        </SheetDescription>
+                      </SheetHeader>
+                      <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="role" className="text-right">
+                            Role
+                          </Label>
+                          <Input disabled id="role" value={user?.role?.type} className="col-span-3" />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="username" className="text-right">
+                            Username
+                          </Label>
+                          <Input disabled id="username" value={user?.username} className="col-span-3" />
+                        </div>
+                      </div>
+                      <SheetFooter>
+                        <SheetClose asChild>
+                          <Button disabled type="submit">Save changes</Button>
+                        </SheetClose>
+                      </SheetFooter>
+                    </SheetContent>
+                  </Sheet>
+
                 </TooltipTrigger>
                 <TooltipContent side="right" sideOffset={5}>
                   Account
@@ -201,12 +270,12 @@ export default function Layout({ view, children }: { view: string; children: Rea
         </aside>
         <div className="flex flex-col">
           <header className="sticky top-0 z-10 flex h-[57px] items-center gap-1 border-b bg-background px-4">
-            <h1 className="text-xl font-semibold">TaaS</h1>
+            <h1 className="text-xl font-semibold">TaaS {user?.role?.type && <span className="underline decoration-dashed decoration-pink-500">admin</span>}</h1>
             <Drawer>
               <DrawerTrigger asChild>
                 <Button variant="ghost" size="icon" className="md:hidden">
                   <Settings className="size-4" />
-                  <span className="sr-only">Settings</span>
+                  <span className="sr-only">Users</span>
                 </Button>
               </DrawerTrigger>
               <DrawerContent className="max-h-[80vh]">
@@ -321,7 +390,7 @@ export default function Layout({ view, children }: { view: string; children: Rea
                 </form>
               </DrawerContent>
             </Drawer>
-            {session?.user?.name && <TokensTracker />}
+            {user?.token && <TokensTracker token={user?.token} />}
 
             <Button variant="outline" size="sm" className="ml-auto gap-1.5 text-sm">
               {status === "authenticated" ? (
@@ -346,6 +415,7 @@ export default function Layout({ view, children }: { view: string; children: Rea
           </header>
           <main className="grid flex-1 gap-4 overflow-auto p-4 md:grid-cols-2 lg:grid-cols-3">
             {children}
+            <Toaster />
           </main>
         </div>
       </div>
