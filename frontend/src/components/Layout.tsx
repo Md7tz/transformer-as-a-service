@@ -51,13 +51,17 @@ import { signIn, signOut, useSession } from "next-auth/react"
 import { useRouter } from 'next/router';
 import TokensTracker from "@/components/tokens"
 import { toast } from "sonner"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 export default function Layout({ view, children }: { view: string; children: React.ReactNode }) {
 
-  const [user, setUser] = useState({name: '', username: ''})
+  const [user, setUser] = useState({ name: '', username: '', token: { amount: 0 }, role: { type: "" } })
   const { data: session, status } = useSession()
   const router = useRouter();
+
+  useEffect(() => {
+    getMe();
+  }, [])
 
   const getMe = async () => {
     try {
@@ -171,25 +175,27 @@ export default function Layout({ view, children }: { view: string; children: Rea
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className={`rounded-lg ${router.pathname.includes('users') ? 'bg-muted' : ''}`}
-                    aria-label="Users"
-                    onClick={() => router.push('/admin/users')}
+            {user.role?.type === "admin" && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={`rounded-lg ${router.pathname.includes('users') ? 'bg-muted' : ''}`}
+                      aria-label="Users"
+                      onClick={() => router.push('/admin/users')}
 
-                  >
-                    <Settings2 className="size-5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="right" sideOffset={5}>
-                  Settings
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+                    >
+                      <Settings2 className="size-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right" sideOffset={5}>
+                    Users
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
           </nav>
           <nav className="mt-auto grid gap-1 p-2">
             <TooltipProvider>
@@ -216,14 +222,14 @@ export default function Layout({ view, children }: { view: string; children: Rea
                     <SheetTrigger asChild>
                       {/* <Button variant="outline">Open</Button> */}
                       <Button
-                    variant="ghost"
-                    size="icon"
-                    className="mt-auto rounded-lg"
-                    aria-label="Account"
-                    onClick={() => getMe()}
-                  >
-                    <SquareUser className="size-5" />
-                  </Button>
+                        variant="ghost"
+                        size="icon"
+                        className="mt-auto rounded-lg"
+                        aria-label="Account"
+                      // onClick={() => getMe()}
+                      >
+                        <SquareUser className="size-5" />
+                      </Button>
                     </SheetTrigger>
                     <SheetContent>
                       <SheetHeader>
@@ -264,12 +270,12 @@ export default function Layout({ view, children }: { view: string; children: Rea
         </aside>
         <div className="flex flex-col">
           <header className="sticky top-0 z-10 flex h-[57px] items-center gap-1 border-b bg-background px-4">
-            <h1 className="text-xl font-semibold">TaaS</h1>
+            <h1 className="text-xl font-semibold">TaaS {user?.role?.type && <span className="underline decoration-dashed decoration-pink-500">admin</span>}</h1>
             <Drawer>
               <DrawerTrigger asChild>
                 <Button variant="ghost" size="icon" className="md:hidden">
                   <Settings className="size-4" />
-                  <span className="sr-only">Settings</span>
+                  <span className="sr-only">Users</span>
                 </Button>
               </DrawerTrigger>
               <DrawerContent className="max-h-[80vh]">
@@ -384,7 +390,7 @@ export default function Layout({ view, children }: { view: string; children: Rea
                 </form>
               </DrawerContent>
             </Drawer>
-            {session?.user?.name && <TokensTracker />}
+            {user?.token && <TokensTracker token={user?.token} />}
 
             <Button variant="outline" size="sm" className="ml-auto gap-1.5 text-sm">
               {status === "authenticated" ? (
