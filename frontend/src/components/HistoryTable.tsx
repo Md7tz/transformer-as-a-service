@@ -16,7 +16,15 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
-import { Pagination } from "@/components/ui/pagination";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 export function HistoryTable(props: any) {
   const [search, setSearch] = useState("");
@@ -31,14 +39,18 @@ export function HistoryTable(props: any) {
         item.model.toLowerCase().includes(search.toLowerCase()) ||
         item.type.toLowerCase().includes(search.toLowerCase()) ||
         item.prompt.toLowerCase().includes(search.toLowerCase()) ||
-        item.result.sentiment.toLowerCase().includes(search.toLowerCase())
+        (item.result.sentiment?.toLowerCase().includes(search.toLowerCase()) ?? false) ||
+        (String((item.result.score * 100).toFixed(2)).concat('%').includes(search.toLowerCase()) ?? false) ||
+        (item.result.processed_text?.toLowerCase().includes(search.toLowerCase()) ?? false)
     );
   }, [history, search]);
 
   const sortedHistory = useMemo(() => {
     return filteredHistory?.sort((a, b) => {
-      if (a[sort.key] < b[sort.key]) return sort.order === "asc" ? -1 : 1;
-      if (a[sort.key] > b[sort.key]) return sort.order === "asc" ? 1 : -1;
+      const aValue = a[sort.key]?.toLowerCase?.() ?? '';
+      const bValue = b[sort.key]?.toLowerCase?.() ?? '';
+      if (aValue < bValue) return sort.order === "asc" ? -1 : 1;
+      if (aValue > bValue) return sort.order === "asc" ? 1 : -1;
       return 0;
     });
   }, [filteredHistory, sort]);
@@ -49,23 +61,25 @@ export function HistoryTable(props: any) {
     return sortedHistory?.slice(startIndex, endIndex);
   }, [sortedHistory, page, pageSize]);
 
-  console.log(paginatedHistory)
   const handleSort = (key: string) => {
     if (sort.key === key) {
       setSort({ key, order: sort.order === "asc" ? "desc" : "asc" });
     } else {
       setSort({ key, order: "asc" });
     }
+    setPage(1); // Reset to first page on sort change
   };
 
-  const handlePageChange = (page: number) => {
-    setPage(page);
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
   };
 
   const handlePageSizeChange = (size: number) => {
     setPageSize(size);
     setPage(1);
   };
+
+  const totalPages = Math.ceil(filteredHistory.length / pageSize);
 
   return (
     <div className="col-span-full gap-4 container mx-auto p-4">
@@ -81,17 +95,16 @@ export function HistoryTable(props: any) {
           <Select
             id="page-size"
             defaultValue={pageSize.toString()}
-            onValueChange={handlePageSizeChange}
+            onValueChange={(value) => handlePageSizeChange(Number(value))}
             className="w-24"
-            value={10}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={10}>10</SelectItem>
-              <SelectItem value={20}>20</SelectItem>
-              <SelectItem value={50}>50</SelectItem>
+              <SelectItem value="10">10</SelectItem>
+              <SelectItem value="20">20</SelectItem>
+              <SelectItem value="50">50</SelectItem>
             </SelectContent>
           </Select>
           <Label htmlFor="page-size">entries</Label>
@@ -119,11 +132,8 @@ export function HistoryTable(props: any) {
                   <span className="ml-1">{sort.order === "asc" ? "\u2191" : "\u2193"}</span>
                 )}
               </TableHead>
-              <TableHead className="cursor-pointer" onClick={() => handleSort("result")}>
+              <TableHead className="cursor-pointer">
                 Result
-                {sort.key === "result" && (
-                  <span className="ml-1">{sort.order === "asc" ? "\u2191" : "\u2193"}</span>
-                )}
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -134,11 +144,10 @@ export function HistoryTable(props: any) {
                 <TableCell>{item.type}</TableCell>
                 <TableCell>{item.prompt}</TableCell>
                 <TableCell>
-                  {item.type == "ner" ? 
-                  <div className="line-clamp-3">{item.result['processed_text']}</div>
-                  :
-                  <div className="line-clamp-3">{item.result.sentiment} {(item.result.score * 100).toFixed(2)}%</div>
-                
+                  {item.type == "ner" ?
+                    <div className="line-clamp-3">{item.result['processed_text']}</div>
+                    :
+                    <div className="line-clamp-3">{item.result.sentiment} {(item.result.score * 100).toFixed(2)}%</div>
                   }
                 </TableCell>
               </TableRow>
@@ -146,13 +155,54 @@ export function HistoryTable(props: any) {
           </TableBody>
         </Table>
       </div>
-      <div className="flex items-center justify-between">
-        {/* <Pagination
-          currentPage={page}
-          pageSize={pageSize}
-          totalItems={filteredHistory?.length}
-          onPageChange={handlePageChange}
-        /> */}
+      <div className="flex items-center justify-between mt-4">
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                href="#"
+                onClick={(e) => {
+                  if(page === 1) return;
+                  e.preventDefault();
+                  handlePageChange(page - 1);
+                }}
+                className={page === 1 ? "opacity-50 cursor-not-allowed" : ""}
+                aria-disabled={page === 1}
+              />
+            </PaginationItem>
+            {Array.from({ length: totalPages }, (_, index) => (
+              <PaginationItem key={index}>
+                <PaginationLink
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handlePageChange(index + 1);
+                  }}
+                  isActive={page === index + 1}
+                >
+                  {index + 1}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+            {totalPages > 5 && page < totalPages - 2 && (
+              <PaginationItem>
+                <PaginationEllipsis />
+              </PaginationItem>
+            )}
+            <PaginationItem>
+              <PaginationNext
+                href="#"
+                onClick={(e) => {
+                  if(page === totalPages) return;
+                  e.preventDefault();
+                  handlePageChange(page + 1);
+                }}
+                className={page === totalPages ? "opacity-50 cursor-not-allowed" : ""}
+                aria-disabled={page === totalPages}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
       </div>
     </div>
   );
