@@ -35,7 +35,7 @@ class NERProcessor:
 
         results = pipe(prompt)
         enitites = results.copy()
-        results.append({"processed text": insert_entity_labels(prompt, enitites)})
+        results.append({"processed_text": insert_entity_labels(prompt, enitites)})
         results.append({"computation_time": computation_time, "device": str(self.device)})
         results = convert_numpy_types(results)
 

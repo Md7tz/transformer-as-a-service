@@ -87,7 +87,7 @@ export default function Layout({ view, children }: { view: string; children: Rea
   }
 
   // check if this is auth page if it is then don't show the header
-  if (router.pathname.includes('auth')) {
+  if (router.pathname.includes('auth') ) {
     return (
       <div className="grid h-screen w-full">
         {children}
@@ -166,12 +166,14 @@ export default function Layout({ view, children }: { view: string; children: Rea
                     size="icon"
                     className="rounded-lg"
                     aria-label="Documentation"
+                    className={`rounded-lg ${router.pathname.includes('history') ? 'bg-muted' : ''}`}
+                    onClick={() => router.push('/history')}
                   >
                     <Book className="size-5" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="right" sideOffset={5}>
-                  Documentation
+                  History
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
