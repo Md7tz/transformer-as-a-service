@@ -1,9 +1,14 @@
-from typing import Annotated
-from fastapi import APIRouter, HTTPException, Depends
-from dependencies import get_jwt, get_db
-from models import User, Role, Token
+import stripe
+import json
+
+from config import get_settings
 from constants import ModelType
+from dependencies import get_jwt, get_db
+from fastapi import APIRouter, HTTPException, Depends, responses, Request
+from models import User, Role, Token
 from sqlalchemy import orm
+from typing import Annotated
+
 
 router = APIRouter(
     prefix="/users",
@@ -94,3 +99,60 @@ async def update_user_token(request: dict, jwt: Annotated[dict, Depends(get_jwt)
         raise HTTPException(status_code=500, detail="Failed to update user token") from e
     
     return {"message": "User token updated"}
+
+
+@router.get("/checkout")
+async def create_checkout_session(jwt: Annotated[dict, Depends(get_jwt)]):
+    checkout_session = stripe.checkout.Session.create(
+        line_items=[
+            {
+                "price_data": {
+                    "currency": "myr",
+                    "product_data": {
+                        "name": "100 Inference Tokens",
+                    },
+                    "unit_amount": 10,
+                },
+                "quantity": 1,
+            }
+        ],
+        # metadata={
+        #     "user_id": 3,
+        #     "email": "abc@gmail.com",
+        #     "request_id": 1234567890
+        # },
+        mode="payment",
+        success_url='http://127.0.0.1:3000' + "/?redirect=payment-success",
+        cancel_url='http://127.0.0.1:3000' + "/?redirect=payment-failed",
+        customer_email=jwt.get("email"),
+    )
+    return responses.RedirectResponse(checkout_session.url, status_code=303)
+
+
+@router.post("/webhook")
+async def stripe_webhook(request: Request, jwt: Annotated[dict, Depends(get_jwt)], db = Depends(get_db)):
+    payload = await request.body()
+    event = None
+
+    try:
+        event = stripe.Event.construct_from(json.loads(payload), stripe.api_key)
+    except ValueError as e:
+        print("Invalid payload")
+        raise HTTPException(status_code=400, detail="Invalid payload")
+    except stripe.error.SignatureVerificationError as e:
+        print("Invalid signature")
+        raise HTTPException(status_code=400, detail="Invalid signature")
+    
+    print("event received is", event)
+    if event["type"] == "checkout.session.completed":
+        payment = event["data"]["object"]
+        amount = payment["amount_total"]
+        currency = payment["currency"]
+        # user_id = payment["metadata"]["user_id"] # get custom user id from metadata
+        user_email = payment["customer_details"]["email"]
+        # user_name = payment["customer_details"]["name"]
+        order_id = payment["id"]
+        # save to db
+        # send email in background task
+    print(payment)
+    return {}

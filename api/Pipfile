@@ -25,6 +25,7 @@ google-auth = "*"
 requests = "*"
 transformers = "*"
 jose = "*"
+stripe = "*"
 
 [dev-packages]
 

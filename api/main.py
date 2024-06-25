@@ -1,3 +1,5 @@
+import stripe
+
 from typing import Annotated
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -37,6 +39,7 @@ app.add_middleware(
 
 app.add_middleware(SessionMiddleware, secret_key=get_settings().secret_key)
 
+stripe.api_key = get_settings().stripe_secret_key
 
 @app.get("/")
 def read_root(jwt: Annotated[dict, Depends(get_jwt)]):
