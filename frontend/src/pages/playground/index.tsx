@@ -36,19 +36,6 @@ import {
 import { GetServerSideProps } from "next";
 
 
-
-const MODELS = {
-  bert: {
-    name: "BERT",
-    description: "Bidirectional Encoder Representations from Transformers",
-  },
-  roberta: {
-    name: "RoBERTa",
-    description: "Robustly optimized BERT approach",
-  },
-};
-
-
 export function TableComponent({ data }: { data: any }) {
   return (
     <Table>
