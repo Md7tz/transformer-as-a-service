@@ -10,18 +10,27 @@ interface TokensTrackerProps {
     amount?: number;
     reserve?: number;
   };
+  callback?: () => void;
 }
 
-const TokensTracker: React.FC<TokensTrackerProps> = ({ token }) => {
+const TokensTracker: React.FC<TokensTrackerProps> = ({ token, callback }) => {
   const amount = token?.amount ?? 0;
   const reserve = token?.reserve ?? 0;
 
   return (
     <div className="flex items-center gap-2 ms-auto">
       <div className="text-gray-500 dark:text-gray-400">
-        <span className="font-medium">{amount}</span>/ {100 + reserve} tokens{"\n"}
+        <span className="font-medium">{amount + reserve}</span>/ {100 + reserve} tokens{"\n"}
       </div>
-      <Progress className="w-32" max={100 + reserve} value={amount + reserve} />
+      <Progress className="w-32" max={(100 + reserve)/((100+reserve)/100)} value={(amount + reserve)/((100+reserve)/100)} />
+      {/* + button */}
+      <button
+        className="flex items-center gap-1 text-pink-500 dark:text-pink-400"
+        onClick={callback} 
+      >
+        <KeyIcon className="h-5 w-5" />
+        <span>Get more</span>
+      </button>
     </div>
   );
 };

@@ -26,6 +26,9 @@ origins = [
     "http://localhost",
     "http://localhost:8000",
     "http://localhost:3000",
+    "http://127.0.0.1",
+    "http://127.0.0.1:8000",
+    "http://127.0.0.1:3000",
 ]
 
 # CORS middleware so that we can call the API from the browser at a different domain than the API itself.

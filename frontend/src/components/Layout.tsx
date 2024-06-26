@@ -61,9 +61,10 @@ export default function Layout({ view, children }: { view: string; children: Rea
 
   useEffect(() => {
     getMe();
-  }, [])
+  }, [status])
 
   const getMe = async () => {
+    if (status != "authenticated") return
     try {
       const response = await fetch(process.env.NEXT_PUBLIC_API + "/users/me", {
         method: "GET",
@@ -86,8 +87,48 @@ export default function Layout({ view, children }: { view: string; children: Rea
     }
   }
 
+  // checkout stripe
+  const checkoutStripe = async () => {
+    try {
+      const response = await fetch(process.env.NEXT_PUBLIC_API + "/users/payment/checkout", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // console.log(data);
+        // toast.success("Checkout successful");
+        // Redirect to checkout url after loading toast for 1 second
+        const { url } = data;
+
+        toast.promise(
+          new Promise((resolve, reject) => {
+            setTimeout(() => router.push(url)
+              .then(resolve)
+              .catch(reject), 2000);
+          }),
+          {
+            loading: 'Loading...',
+            success: 'Checking out...',
+            error: (err) => `This just happened: ${err.toString()}`,
+            description: 'Redirecting to checkout page',
+          }
+        );
+
+      }
+    }
+    catch (error) {
+      console.error(error);
+      toast.error("Failed to checkout");
+    }
+  }
+
   // check if this is auth page if it is then don't show the header
-  if (router.pathname.includes('auth') ) {
+  if (router.pathname.includes('auth')) {
     return (
       <div className="grid h-screen w-full">
         {children}
@@ -392,7 +433,7 @@ export default function Layout({ view, children }: { view: string; children: Rea
                 </form>
               </DrawerContent>
             </Drawer>
-            {user?.token && <TokensTracker token={user?.token} />}
+            {user?.token && <TokensTracker token={user?.token} callback={checkoutStripe} />}
 
             <Button variant="outline" size="sm" className="ml-auto gap-1.5 text-sm">
               {status === "authenticated" ? (

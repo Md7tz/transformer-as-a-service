@@ -11,11 +11,15 @@ export default function Home() {
 
   useEffect(() => {
     const { redirect } = router.query;
-    console.log(redirect);
+    console.log(redirect)
     if (redirect === "success") {
       toast.success("Sign-in successful!");
+    } else if (redirect === "payment-success") {
+      toast.success("Payment successful!");
+    } else if (redirect === "payment-failed") {
+      toast.error("Payment failed!");
     }
-
+    
     // router.replace(router.pathname, undefined, { shallow: true });
   }, [router]);
   return (
