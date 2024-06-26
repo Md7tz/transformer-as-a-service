@@ -31,6 +31,7 @@ class User(Base):
     
     # Define relationship properties
     role = relationship("Role", backref="users")
+    payment = relationship("Payment", backref="users", uselist=False)
     token = relationship("Token", backref="users", uselist=False)
 
     def delete(self):
@@ -50,6 +51,21 @@ class Role(Base):
         return f"<Role(id={self.id}, type={self.type})>"
     
     role = relationship("User", backref="roles")
+
+class Payment(Base):
+    __tablename__ = "payments"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(BigInteger, ForeignKey("users.id"), nullable=False)
+    amount = Column(Integer, nullable=False)
+    currency = Column(String(3), nullable=False)
+    transaction_id = Column(String(100), nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
+
+    def __repr__(self):
+        return f"<Payment(id={self.id}, user_id={self.user_id}, amount={self.amount}, created_at={self.created_at})>"
+
+    user = relationship("User", backref="payments")
 
 class Token(Base):
     __tablename__ = "tokens"

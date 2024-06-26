@@ -1,3 +1,5 @@
+import stripe
+
 from typing import Annotated
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -24,6 +26,9 @@ origins = [
     "http://localhost",
     "http://localhost:8000",
     "http://localhost:3000",
+    "http://127.0.0.1",
+    "http://127.0.0.1:8000",
+    "http://127.0.0.1:3000",
 ]
 
 # CORS middleware so that we can call the API from the browser at a different domain than the API itself.
@@ -37,6 +42,7 @@ app.add_middleware(
 
 app.add_middleware(SessionMiddleware, secret_key=get_settings().secret_key)
 
+stripe.api_key = get_settings().stripe_secret_key
 
 @app.get("/")
 def read_root(jwt: Annotated[dict, Depends(get_jwt)]):
