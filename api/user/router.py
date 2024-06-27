@@ -5,7 +5,7 @@ from config import get_settings
 from constants import ModelType
 from dependencies import get_jwt, get_db
 from fastapi import APIRouter, HTTPException, Depends, responses, Request
-from models import User, Role, Token, Payment
+from models import User, Role, Token, Payment, Model
 from sqlalchemy import orm
 from typing import Annotated
 
@@ -99,6 +99,15 @@ async def update_user_token(request: dict, jwt: Annotated[dict, Depends(get_jwt)
         raise HTTPException(status_code=500, detail="Failed to update user token") from e
     
     return {"message": "User token updated"}
+
+@router.get("/models")
+async def get_models(jwt: Annotated[dict, Depends(get_jwt)], db = Depends(get_db)):
+    try:
+        models = db.query(Model).all()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Failed to get models") from e
+    
+    return {"models": models}
 
 
 @router.get("/payment/checkout")

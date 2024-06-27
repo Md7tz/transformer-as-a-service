@@ -1,6 +1,6 @@
 # non-business logic functions, e.g. response normalization, data enrichment, etc.
 import numpy as np
-
+# print(numpy.__version__)
 # Function to recursively convert NumPy data types to native Python types
 def convert_numpy_types(obj):
     if isinstance(obj, dict):

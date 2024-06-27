@@ -13,6 +13,7 @@ class NERProcessor:
         self.tokenizer = None
         self.model_mapping = {
             "bert": "dslim/bert-base-NER",
+            "wikineural": "Babelscape/wikineural-multilingual-ner"
         }
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -27,6 +28,7 @@ class NERProcessor:
     def process(self, prompt: str) -> dict:
         if not self.model or not self.tokenizer:
             raise HTTPException(status_code=500, detail="Model not loaded")
+        print("results")
 
         start_time = time()
         # # Perform inference
@@ -34,6 +36,7 @@ class NERProcessor:
         computation_time = time() - start_time
 
         results = pipe(prompt)
+        print(results)
         enitites = results.copy()
         results.append({"processed_text": insert_entity_labels(prompt, enitites)})
         results.append({"computation_time": computation_time, "device": str(self.device)})

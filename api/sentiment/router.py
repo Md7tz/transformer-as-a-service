@@ -1,7 +1,7 @@
 from typing import Annotated
 from fastapi import APIRouter, HTTPException, Depends
 from dependencies import get_jwt, get_db
-from models import Prompt, Result, Model
+from models import Prompt, Result, Model, Token
 from constants import ModelType
 
 from .processor import SentimentProcessor
@@ -22,6 +22,24 @@ async def predict_sentiment(request: dict, jwt: Annotated[dict, Depends(get_jwt)
     prompt = request.get("prompt").strip()
     model_name = request.get("model_name")
     analysis_type = request.get("type")
+    user_id = jwt.get("user_id")
+
+    # get the model if the name is the same and the analysis type is the same
+    model = db.query(Model).filter(Model.name == model_name, Model.type == "ner").first()
+
+    if "token_cost" in model.properties:
+        token_cost = model.properties["token_cost"]
+        user_tokens = db.query(Token).filter(Token.user_id == user_id).first()
+        if user_tokens.amount + user_tokens.reserve < token_cost:
+            raise HTTPException(status_code=400, detail="Insufficient tokens")
+        
+        # deduct the tokens from user_tokens.amount but if not enough deductthe rest from the reserve
+        if user_tokens.amount >= token_cost:
+            user_tokens.amount -= token_cost
+        else:
+            user_tokens.reserve -= token_cost - user_tokens.amount
+            user_tokens.amount = 0
+        db.commit()
 
     if not model_name:
         raise HTTPException(status_code=400, detail="missing model")
@@ -33,13 +51,15 @@ async def predict_sentiment(request: dict, jwt: Annotated[dict, Depends(get_jwt)
     results = processor.process(prompt)
 
     # Save the prompt and result to the database
-    user_id = jwt.get("user_id")
 
     result = Result(output=results)
     db.add(result)
     db.commit()
 
-    prompt = Prompt(user_id=user_id, model_id=ModelType.CLASSIFICATION, result_id=result.id, input=prompt, analysis_type=analysis_type)
+    # get the model if the name is the same and the analysis type is the same
+    model = db.query(Model).filter(Model.name == model_name, Model.type == "sentiment").first()
+
+    prompt = Prompt(user_id=user_id, model_id=model.id , result_id=result.id, input=prompt, analysis_type=analysis_type)
     db.add(prompt)
     db.commit()
     
