@@ -68,6 +68,7 @@ async def update_user_token(request: dict, jwt: Annotated[dict, Depends(get_jwt)
     try:
         user_id = request.get("user_id")
         amount = request.get("amount")
+        reserve = request.get("reserve")
         # Check if user is an admin
         admin_user = db.query(User)\
             .filter(User.id == jwt.get("user_id"), User.deleted_at.is_(None))\
@@ -87,7 +88,10 @@ async def update_user_token(request: dict, jwt: Annotated[dict, Depends(get_jwt)
             .filter(Token.user_id == user_to_update.id)\
             .first()
         if token:
-            token.amount = amount
+            if amount:
+                token.amount = amount
+            if reserve:
+                token.reserve = reserve
             # token.updated_at = func.now()
         else:
             # Create a new token entry if it doesn't exist

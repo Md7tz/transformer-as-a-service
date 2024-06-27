@@ -66,7 +66,7 @@ export default function Users(props: any) {
                     "Content-Type": "application/json",
                 },
                 credentials: "include",
-                body: JSON.stringify({ user_id: userId, amount: amount }),
+                body: JSON.stringify({ user_id: userId, amount: amount}),
             });
 
             if (response.ok) {
@@ -101,7 +101,8 @@ export default function Users(props: any) {
                         <TableRow>
                             <TableHead>Avatar</TableHead>
                             <TableHead>Username/Email</TableHead>
-                            <TableHead>Tokens</TableHead>
+                            <TableHead>Tokens amount</TableHead>
+                            <TableHead>Tokens reserve</TableHead>
                             <TableHead>Created</TableHead>
                             <TableHead>Update</TableHead>
                             <TableHead>Deleted</TableHead>
@@ -131,6 +132,9 @@ export default function Users(props: any) {
                                                 type="number"
                                                 onKeyDown={(e) => handleTokenKeyDown(e, user.id)}
                                             />
+                                        </TableCell>
+                                        <TableCell>
+                                            <span>{user.token?.reserve || 100}</span>
                                         </TableCell>
                                         <TableCell>
                                             <span>{new Date(user.created_at).toLocaleString()}</span>
