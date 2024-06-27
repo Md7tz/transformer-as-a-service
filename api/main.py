@@ -46,7 +46,6 @@ stripe.api_key = get_settings().stripe_secret_key
 
 @app.get("/")
 def read_root(jwt: Annotated[dict, Depends(get_jwt)]):
-    print(jwt)
     return {"message": f"Hi {jwt['name']}. Greetings from fastapi!"}
 
 

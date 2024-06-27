@@ -55,7 +55,6 @@ export const getServerSideProps: GetServerSideProps = (async (ctx) => {
           sentiment = result.label || "";
         }
       }
-      console.log(prompt.result.output[prompt.result.output.length - 2]['processed_text'])
       return {
         model: prompt.model_id === 1 ? "BERT" : "RoBERTa",
         type: prompt.analysis_type,
