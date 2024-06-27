@@ -9,6 +9,7 @@ import {
   Book,
   Bot,
   CornerDownLeft,
+  KeyIcon,
   Rabbit,
   Undo,
 } from "lucide-react";
@@ -196,14 +197,20 @@ export default function Playground(props: any) {
         <div className="flex items-start gap-3 text-muted-foreground">
           <Bot className="size-5" />
           <div className="grid gap-0.5">
-            <p>
-              Neural{" "}
-              <span className="font-medium text-foreground">{model?.name}</span>
-            </p>
-            <p className="text-xs" data-description>
-              {model?.description}
-            </p>
-          </div>
+  <p className="flex items-center">
+    <span>
+      Neural{" "}
+      <span className="font-medium text-foreground">
+        {model?.name} &nbsp;<KeyIcon className="text-pink-500 dark:text-pink-400 h-4 w-4 inline-block" />
+        {model?.properties?.token_cost}
+      </span>
+    </span>
+  </p>
+  <p className="text-xs" data-description>
+    {model?.description}
+  </p>
+</div>
+
         </div>
       </SelectItem>
     ));
@@ -321,7 +328,7 @@ export default function Playground(props: any) {
       <div className="relative flex h-full min-h-[50vh] flex-col rounded-xl bg-muted/50 p-4 lg:col-span-2">
         <Badge variant="outline" className="absolute right-3 top-3">
           Output &nbsp;
-          { allowDownload && (
+          {allowDownload && (
 
             <Button
               className="p-0 m-0 bg-transparent dark:bg-gray-900 dark:text-gray-50 hover:bg-gray-100 dark:hover:bg-gray-800"
