@@ -42,9 +42,9 @@ async def predict_sentiment(request: dict, jwt: Annotated[dict, Depends(get_jwt)
         db.commit()
 
     if not model_name:
-        raise HTTPException(status_code=400, detail="missing model")
+        raise HTTPException(status_code=400, detail="Missing model")
     elif not prompt:
-        raise HTTPException(status_code=400, detail="missing prompt")
+        raise HTTPException(status_code=400, detail="Missing prompt")
     
     if model_name:
         processor.load_model(model_name)

@@ -35,6 +35,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { GetServerSideProps } from "next";
+import { toast } from "sonner";
 
 
 export function TableComponent({ data }: { data: any }) {
@@ -127,9 +128,14 @@ export default function Playground(props: any) {
     }
 
     data = await response?.json();
+    if (!response?.ok) {
+      console.error(data.detail);
+      toast.error(data.detail);
+      return;
+    }
 
     // persist the last element of data (computation time and device)
-    setCompute(data.slice(-1)[0])
+    setCompute(data?.slice(-1)[0])
 
     // remove last element
     data.pop()
