@@ -25,7 +25,7 @@ async def predict_sentiment(request: dict, jwt: Annotated[dict, Depends(get_jwt)
     user_id = jwt.get("user_id")
 
     # get the model if the name is the same and the analysis type is the same
-    model = db.query(Model).filter(Model.name == model_name, Model.type == "ner").first()
+    model = db.query(Model).filter(Model.name == model_name, Model.type == "sentiment").first()
 
     if "token_cost" in model.properties:
         token_cost = model.properties["token_cost"]
