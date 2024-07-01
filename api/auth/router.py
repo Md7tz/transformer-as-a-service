@@ -22,6 +22,9 @@ async def handle_callback(user_data: dict, db: Session = Depends(get_db)):
     # Check if user already exists
     existing_user = db.query(User).filter(User.username == user["email"]).first()
     if existing_user:
+        if existing_user.deleted_at:
+            # if the user is deleted send an error message
+            raise HTTPException(status_code=400, detail="User no longer has access to the system")
         return Response(content=json.dumps({"message": "User already exists"}), status_code=200)
     
 

@@ -36,7 +36,10 @@ export const authOptions = {
 
             // Handle the response from your API as needed
             const data = await response.json();
-
+            if (!response.ok) {
+                // console.error(data);
+                return false;
+            }
             // Return true to allow sign in, or false to prevent sign in
             return true;
         },

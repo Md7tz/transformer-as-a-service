@@ -269,6 +269,7 @@ export default function Layout({ view, children }: { view: string; children: Rea
                         size="icon"
                         className="mt-auto rounded-lg"
                         aria-label="Account"
+                        disabled={!user?.role?.type}
                       // onClick={() => getMe()}
                       >
                         <SquareUser className="size-5" />
@@ -323,9 +324,9 @@ export default function Layout({ view, children }: { view: string; children: Rea
               </DrawerTrigger>
               <DrawerContent className="max-h-[80vh]">
                 <DrawerHeader>
-                  <DrawerTitle>Configuration</DrawerTitle>
+                  <DrawerTitle>Users</DrawerTitle>
                   <DrawerDescription>
-                    Configure the settings for the model and messages.
+                    Users list management
                   </DrawerDescription>
                 </DrawerHeader>
                 <form className="grid w-full items-start gap-6 overflow-auto p-4 pt-0">

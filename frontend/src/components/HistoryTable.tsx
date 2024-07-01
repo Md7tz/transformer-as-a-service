@@ -79,7 +79,7 @@ export function HistoryTable(props: any) {
     setPage(1);
   };
 
-  const totalPages = Math.ceil(filteredHistory.length / pageSize);
+  const totalPages = Math.ceil(filteredHistory?.length / pageSize);
 
   return (
     <div className="col-span-full gap-4 container mx-auto p-4">
