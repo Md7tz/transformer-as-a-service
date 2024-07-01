@@ -1,4 +1,5 @@
 import { HistoryTable } from "@/components/HistoryTable";
+import { createDecipheriv } from "crypto";
 import { GetServerSideProps } from "next";
 import nookies from "nookies"
 
@@ -27,10 +28,13 @@ export const getServerSideProps: GetServerSideProps = (async (ctx) => {
     const webhookData = await res.json();
    // Format result data
     interface Prompt {
+      id: any;
+      created_at: any;
       model_id: number;
       analysis_type: string;
       input: string;
       result: {
+        id: any;
         output: any;
         score: number;
       };
@@ -56,10 +60,12 @@ export const getServerSideProps: GetServerSideProps = (async (ctx) => {
         }
       }
       return {
+        id: prompt.id,
+        created_at: prompt?.created_at,
         model: prompt.model_id === 1 ? "BERT" : "RoBERTa",
         type: prompt.analysis_type,
         prompt: prompt.input,
-        result: { sentiment, score: maxScore, processed_text: prompt.result.output[prompt.result.output.length - 2]['processed_text'] || ""}
+        result: { id: prompt.result?.id, sentiment, score: maxScore, processed_text: prompt.result.output[prompt.result.output.length - 2]['processed_text'] || ""}
       };
     });
 

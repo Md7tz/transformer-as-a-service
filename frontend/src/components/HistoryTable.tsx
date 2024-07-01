@@ -25,6 +25,9 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { toast } from "sonner";
+import { Button } from "./ui/button";
+import { TrashIcon } from "lucide-react";
 
 export function HistoryTable(props: any) {
   const [search, setSearch] = useState("");
@@ -81,6 +84,30 @@ export function HistoryTable(props: any) {
 
   const totalPages = Math.ceil(filteredHistory?.length / pageSize);
 
+  const onDelete = async (id: string) => {
+    try {
+      const response = await fetch(process.env.NEXT_PUBLIC_API + "/users/history/" + id, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        toast.success(data.message);
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      }
+    }
+    catch (error) {
+      console.error(error);
+      toast.error("Failed to prompt history");
+    }
+  }
+
   return (
     <div className="col-span-full gap-4 container mx-auto p-4">
       <div className="flex items-center justify-between mb-2">
@@ -135,6 +162,12 @@ export function HistoryTable(props: any) {
               <TableHead className="cursor-pointer">
                 Result
               </TableHead>
+              <TableHead className="cursor-pointer">
+                Action
+              </TableHead>
+              <TableHead className="cursor-pointer">
+                Created At
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -150,6 +183,14 @@ export function HistoryTable(props: any) {
                     <div className="line-clamp-3">{item.result.sentiment} {(item.result.score * 100).toFixed(2)}%</div>
                   }
                 </TableCell>
+                <TableCell>
+                  <Button className="text-red-500" size="icon" variant="ghost" onClick={() => onDelete(item.id)}>
+                    <TrashIcon className="h-5 w-5" />
+                  </Button>
+                </TableCell>
+                <TableCell>
+                  <span>{new Date(item.created_at).toLocaleString()}</span>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -162,7 +203,7 @@ export function HistoryTable(props: any) {
               <PaginationPrevious
                 href="#"
                 onClick={(e) => {
-                  if(page === 1) return;
+                  if (page === 1) return;
                   e.preventDefault();
                   handlePageChange(page - 1);
                 }}
@@ -193,7 +234,7 @@ export function HistoryTable(props: any) {
               <PaginationNext
                 href="#"
                 onClick={(e) => {
-                  if(page === totalPages) return;
+                  if (page === totalPages) return;
                   e.preventDefault();
                   handlePageChange(page + 1);
                 }}

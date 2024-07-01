@@ -5,7 +5,7 @@ from config import get_settings
 from constants import ModelType
 from dependencies import get_jwt, get_db
 from fastapi import APIRouter, HTTPException, Depends, responses, Request
-from models import User, Role, Token, Payment, Model
+from models import User, Role, Token, Payment, Model, Result, Prompt
 from sqlalchemy import orm
 from typing import Annotated
 
@@ -60,6 +60,33 @@ async def delete_user(user_id: int, jwt: Annotated[dict, Depends(get_jwt)], db =
     if user.deleted_at is None:
         return {"message": "User undeleted successfully", "id": user_id}
     return {"message": "User deleted successfully", "id": user_id}
+
+
+@router.delete("/history/{prompt_id}")
+async def delete_history(prompt_id: int, jwt: Annotated[dict, Depends(get_jwt)], db = Depends(get_db)):
+    # delete result id with prompt id
+    try:
+        # Find the prompt by ID
+        prompt = db.query(Prompt).filter(Prompt.id == prompt_id).first()
+        if not prompt:
+            raise HTTPException(status_code=404, detail="Prompt not found")
+
+        # Find the result associated with the prompt
+        result = db.query(Result).filter(Result.id == prompt.result_id).first()
+        if result:
+            db.delete(result)
+
+        # Delete the prompt
+        db.delete(prompt)
+
+        # Commit the changes to the database
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to delete history") from e
+
+    return {"message": "History deleted successfully", "id": prompt_id}
+
 
 @router.patch("/token")
 async def update_user_token(request: dict, jwt: Annotated[dict, Depends(get_jwt)], db = Depends(get_db)):
