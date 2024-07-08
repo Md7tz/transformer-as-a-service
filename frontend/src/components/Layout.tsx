@@ -188,8 +188,9 @@ export default function Layout({ view, children }: { view: string; children: Rea
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="rounded-lg"
+                    className={`rounded-lg ${router.pathname.includes('doc') ? 'bg-muted' : ''}`}
                     aria-label="API"
+                    onClick={() => router.push('/doc')}
                   >
                     <Code2 className="size-5" />
                   </Button>
