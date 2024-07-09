@@ -3,6 +3,21 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 name = "pypi"
 
+[[source]]
+url = "https://download.pytorch.org/whl/"
+verify_ssl = true
+name = "downloadpytorch-382"
+
+[[source]]
+url = "https://download.pytorch.org/whl/"
+verify_ssl = true
+name = "downloadpytorch-573"
+
+[[source]]
+url = "https://download.pytorch.org/whl/"
+verify_ssl = true
+name = "downloadpytorch-312"
+
 [packages]
 fastapi = "*"
 uvicorn = {extras = ["standard"] }
@@ -24,9 +39,14 @@ oauth2client = "*"
 google-auth = "*"
 requests = "*"
 transformers = "*"
-jose = "*"
 stripe = "*"
 numpy = "1.26.0"
+python-jose = {extras = ["cryptography"], version = "*"}
+accelerate = "*"
+pip = "*"
+torch = {version = "==2.0.1", index = "downloadpytorch-382"}
+torchvision = {version = "==0.15.2", index = "downloadpytorch-573"}
+torchaudio = {version = "==2.0.2", index = "downloadpytorch-312"}
 
 [dev-packages]
 

@@ -22,6 +22,7 @@ class NERProcessor:
         try:
             self.tokenizer = AutoTokenizer.from_pretrained(mapped_model_name)
             self.model = AutoModelForTokenClassification.from_pretrained(mapped_model_name)
+            self.pipe = pipeline("ner", model=self.model, tokenizer=self.tokenizer, device=self.device)
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(f"Failed to load {self.model} model")) from e
         
@@ -31,10 +32,9 @@ class NERProcessor:
 
         start_time = time()
         # # Perform inference
-        pipe = pipeline("ner", model=self.model, tokenizer=self.tokenizer, device=self.device)
-        computation_time = time() - start_time
 
-        results = pipe(prompt)
+        results = self.pipe(prompt)
+        computation_time = time() - start_time
         enitites = results.copy()
         results.append({"processed_text": insert_entity_labels(prompt, enitites)})
         results.append({"computation_time": computation_time, "device": str(self.device)})

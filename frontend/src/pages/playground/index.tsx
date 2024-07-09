@@ -37,6 +37,12 @@ import {
 import { GetServerSideProps } from "next";
 import { toast } from "sonner";
 
+const MODELS = {
+  '1': "BERT",
+  '2': "RoBERTa",
+  '3': "WikiNeural",
+  '4': "BERT",
+}
 
 export function TableComponent({ data }: { data: any }) {
   return (
@@ -165,8 +171,9 @@ export default function Playground(props: any) {
           sentiment = result.label;
         }
       }
+      
       return {
-        model: prompt.model_id == 1 ? "BERT" : "RoBERTa",
+        model: MODELS[prompt?.model_id],
         type: prompt.analysis_type,
         prompt: prompt.input,
         result: { sentiment, score: maxScore }
@@ -174,8 +181,27 @@ export default function Playground(props: any) {
     });
 
     // Update state with formatted data
-    setTableData(formattedData);
+    setTableData(formattedData?.slice(-1));
     setAllowDownload(true)
+  }
+
+  async function onRecommend() {
+    const loader = toast.loading("LLM Processing recommendation...");
+    const res = await fetch("http://localhost:8080/process", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ text: prompt, sentiment_analysis: { sentiment: tableData[0]?.result?.sentiment, confidence: tableData[0]?.result?.score} }),
+      credentials: "include",
+    });
+    const data = await res.json();
+    toast?.dismiss(loader);
+    toast.success("LLM Recommendation processed successfully");
+    // Update state with formatted data
+    setJsonDisplay(data)
+    setCompute({ computation_time: data.computation_time, device: data.device })
+    setType("ner")
   }
 
   function onCLear() {
@@ -312,6 +338,12 @@ export default function Playground(props: any) {
               Clear
               <Undo className="size-3.5" />
             </Button>
+            {type == "sentiment" && jsonDisplay?.length > 0 && (
+              <Button type="reset" variant="outline" className="gap-1.5" onClick={onRecommend}>
+              Recommend
+              <CornerDownLeft className="size-3.5" />
+            </Button>
+            )}
           </div>
           <div className="flex items-center gap-3">
             {compute.computation_time !== -1 && (
