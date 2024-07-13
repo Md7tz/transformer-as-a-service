@@ -28,12 +28,34 @@ import {
 import { toast } from "sonner";
 import { Button } from "./ui/button";
 import { TrashIcon } from "lucide-react";
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogCancel } from "@/components/ui/dialog"
+
+function DeleteDBox({ onConfirm = () => { }, onCancel = () => { } }) {
+  return (
+    <Dialog open={true}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Are you sure?</DialogTitle>
+          <DialogDescription>
+            This action cannot be undone. This will permanently delete the selected item.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="destructive" onClick={onConfirm}>Confirm Delete</Button>
+          <Button variant="secondary" onClick={onCancel}>Cancel</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 
 export function HistoryTable(props: any) {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState({ key: "model", order: "asc" });
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [deleteId, setDeleteId] = useState(null);
   const history = useMemo(() => props.initialData, [props.initialData]);
 
   const filteredHistory = useMemo(() => {
@@ -101,12 +123,22 @@ export function HistoryTable(props: any) {
           window.location.reload();
         }, 1000);
       }
-    }
-    catch (error) {
+    } catch (error) {
       console.error(error);
       toast.error("Failed to prompt history");
     }
-  }
+  };
+
+  const handleConfirmDelete = () => {
+    if (deleteId) {
+      onDelete(deleteId);
+      setDeleteId(null);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteId(null);
+  };
 
   return (
     <div className="col-span-full gap-4 container mx-auto p-4">
@@ -184,7 +216,7 @@ export function HistoryTable(props: any) {
                   }
                 </TableCell>
                 <TableCell>
-                  <Button className="text-red-500" size="icon" variant="ghost" onClick={() => onDelete(item.id)}>
+                  <Button className="text-red-500" size="icon" variant="ghost" onClick={() => setDeleteId(item.id)}>
                     <TrashIcon className="h-5 w-5" />
                   </Button>
                 </TableCell>
@@ -244,6 +276,14 @@ export function HistoryTable(props: any) {
             </PaginationItem>
           </PaginationContent>
         </Pagination>
+        {
+          deleteId && (
+            <DeleteDBox
+              onConfirm={handleConfirmDelete}
+              onCancel={handleCancelDelete}
+            />
+          )
+        }
       </div>
     </div>
   );
