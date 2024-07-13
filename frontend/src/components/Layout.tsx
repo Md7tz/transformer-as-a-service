@@ -315,7 +315,7 @@ export default function Layout({ view, children }: { view: string; children: Rea
         </aside>
         <div className="flex flex-col">
           <header className="sticky top-0 z-10 flex h-[57px] items-center gap-1 border-b bg-background px-4">
-            <h1 className="text-xl font-semibold">TaaS {user?.role?.type && <span className="underline decoration-dashed decoration-pink-500">admin</span>}</h1>
+            <h1 className="text-xl font-semibold">TaaS {user?.role?.type == "admin" && <span className="underline decoration-dashed decoration-pink-500">admin</span>}</h1>
             <Drawer>
               <DrawerTrigger asChild>
                 <Button variant="ghost" size="icon" className="md:hidden">

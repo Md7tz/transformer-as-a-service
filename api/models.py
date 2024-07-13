@@ -18,7 +18,7 @@ from database import Base
 class User(Base):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, autoincrement=True, unique=True, nullable=False)
     role_id = Column(BigInteger, ForeignKey("roles.id"), nullable=False)
     username = Column(String, unique=True, index=True)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())

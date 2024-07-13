@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
 from dependencies import get_db
 
-from models import User, Role
+from models import Token, User, Role
 import json
 
 
@@ -38,5 +38,10 @@ async def handle_callback(user_data: dict, db: Session = Depends(get_db)):
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
+
+    new_token = Token(user_id=new_user.id, amount=100, reserve=0)
+    db.add(new_token)
+    db.commit()
+    db.refresh(new_token)
 
     return {"message": "User created successfully", "user": new_user}
