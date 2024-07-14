@@ -1,6 +1,8 @@
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import nookies from 'nookies';
 
-export default function ApiDoc() {
+export default function ApiDoc({ sessionToken }) {
     return (
         <div className="col-span-full container mx-auto px-4 py-12 md:px-6 lg:px-8">
             <div className="grid gap-8 lg:grid-cols-2">
@@ -19,13 +21,13 @@ export default function ApiDoc() {
                         <div className="mt-4 rounded-md bg-background p-4">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center space-x-2">
-                                    <code className="font-mono text-sm text-primary">{process.env.NEXT_PUBLIC_API}/api/ner/predict</code>
+                                    <code className="font-mono text-sm text-primary">{process.env.NEXT_PUBLIC_API}/sentiment/predict</code>
                                     <Button
                                         size="sm"
                                         variant="outline"
                                         className="flex items-center gap-1"
                                         onClick={() => {
-                                            navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_API}/api/ner/predict`)
+                                            navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_API}/sentiment/predict`)
                                         }}
                                     >
                                         <CopyIcon className="h-4 w-4" />
@@ -35,13 +37,13 @@ export default function ApiDoc() {
                             </div>
                             <p className="mt-4 text-muted-foreground">Include the following cookies in your requests:</p>
                             <div className="mt-2 flex items-center space-x-2">
-                                <code className="font-mono text-sm text-primary">next-auth.session-token=your_session_token;</code>
+                                <code className="font-mono text-sm text-primary">next-auth.session-token={sessionToken.substring(0,30)+'...'};</code>
                                 <Button
                                     size="sm"
                                     variant="outline"
                                     className="flex items-center gap-1"
                                     onClick={() => {
-                                        navigator.clipboard.writeText("next-auth.session-token=your_session_token;")
+                                        navigator.clipboard.writeText(`next-auth.session-token=${sessionToken};`)
                                     }}
                                 >
                                     <CopyIcon className="h-4 w-4" />
@@ -50,15 +52,14 @@ export default function ApiDoc() {
                             </div>
                             <div className="mt-4 rounded-md bg-background p-4">
                                 <pre className="text-sm text-primary">{`
-curl -X POST ${process.env.NEXT_PUBLIC_API}/ner/predict \\
+curl -X POST ${process.env.NEXT_PUBLIC_API}/sentiment/predict \\
      -H "Content-Type: application/json" \\
-     --cookie "next-auth.session-token=your_session_token;" \\
+     --cookie "next-auth.session-token=${sessionToken.substring(0,30)+'...'};" \\
      -d '{
            "prompt": "<your_prompt>",
            "model_name": "<your_model_name>",
            "type": "<your_type>"
          }'
-
                 `}</pre>
                                 <Button
                                     size="sm"
@@ -66,15 +67,14 @@ curl -X POST ${process.env.NEXT_PUBLIC_API}/ner/predict \\
                                     className="flex items-center gap-1 mt-2"
                                     onClick={() => {
                                         navigator.clipboard.writeText(`
-curl -X POST ${process.env.NEXT_PUBLIC_API}/ner/predict \\
+curl -X POST ${process.env.NEXT_PUBLIC_API}/sentiment/predict \\
      -H "Content-Type: application/json" \\
-     --cookie "next-auth.session-token=your_session_token;" \\
+     --cookie "next-auth.session-token=${sessionToken};" \\
      -d '{
            "prompt": "<your_prompt>",
            "model_name": "<your_model_name>",
            "type": "<your_type>"
          }'
-
                 `)
                                     }}
                                 >
@@ -90,15 +90,10 @@ curl -X POST ${process.env.NEXT_PUBLIC_API}/ner/predict \\
                         <div className="mt-4 rounded-md bg-background p-4">
                             <pre className="text-sm text-primary">{`
 import axios from 'axios';
+import { parseCookies } from 'nookies';
 
 const fetchData = async () => {
-  const cookies = document.cookie
-    .split('; ')
-    .reduce((prev, current) => {
-      const [name, value] = current.split('=');
-      prev[name] = value;
-      return prev;
-    }, {});
+  const cookies = parseCookies();
 
   try {
     const response = await axios.get(process.env.NEXT_PUBLIC_API + '/sentiment/models', {
@@ -115,7 +110,7 @@ const fetchData = async () => {
 };
 
 fetchData();
-              `}</pre>
+                            `}</pre>
                             <Button
                                 size="sm"
                                 variant="outline"
@@ -123,15 +118,10 @@ fetchData();
                                 onClick={() => {
                                     navigator.clipboard.writeText(`
 import axios from 'axios';
+import { parseCookies } from 'nookies';
 
 const fetchData = async () => {
-  const cookies = document.cookie
-    .split('; ')
-    .reduce((prev, current) => {
-      const [name, value] = current.split('=');
-      prev[name] = value;
-      return prev;
-    }, {});
+  const cookies = parseCookies();
 
   try {
     const response = await axios.get(process.env.NEXT_PUBLIC_API + '/sentiment/models', {
@@ -180,4 +170,15 @@ function CopyIcon(props) {
             <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
         </svg>
     );
+}
+
+export async function getServerSideProps(context) {
+    const cookies = nookies.get(context);
+    const sessionToken = cookies['next-auth.session-token'] || null;
+
+    return {
+        props: {
+            sessionToken,
+        },
+    };
 }

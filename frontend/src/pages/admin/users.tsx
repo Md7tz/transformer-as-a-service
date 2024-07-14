@@ -134,7 +134,7 @@ export default function Users(props: any) {
                                             />
                                         </TableCell>
                                         <TableCell>
-                                            <span>{user.token?.reserve || 100}</span>
+                                            <span>{user.token?.reserve ?? 100}</span>
                                         </TableCell>
                                         <TableCell>
                                             <span>{new Date(user.created_at).toLocaleString()}</span>

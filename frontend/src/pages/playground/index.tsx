@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { getCsrfToken, useSession } from "next-auth/react";
 import nookies from 'nookies'
+import ee from "@/components/EventEmitter";
 
 import JsonView from 'react18-json-view'
 import 'react18-json-view/src/style.css'
@@ -183,6 +184,8 @@ export default function Playground(props: any) {
     // Update state with formatted data
     setTableData(formattedData?.slice(-1));
     setAllowDownload(true)
+
+    ee.emit("inference");
   }
 
   async function onRecommend() {

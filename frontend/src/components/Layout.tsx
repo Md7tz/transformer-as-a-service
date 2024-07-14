@@ -52,9 +52,10 @@ import { useRouter } from 'next/router';
 import TokensTracker from "@/components/tokens"
 import { toast } from "sonner"
 import { useEffect, useState } from "react"
+import ee from "@/components/EventEmitter";
+
 
 export default function Layout({ view, children }: { view: string; children: React.ReactNode }) {
-
   const [user, setUser] = useState({ name: '', username: '', token: { amount: 0 }, role: { type: "" } })
   const { data: session, status } = useSession()
   const router = useRouter();
@@ -86,6 +87,8 @@ export default function Layout({ view, children }: { view: string; children: Rea
       toast.error("Failed to fetch user");
     }
   }
+
+  ee.on('inference', () => getMe());
 
   // checkout stripe
   const checkoutStripe = async () => {
